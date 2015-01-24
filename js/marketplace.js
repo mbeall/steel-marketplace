@@ -44,7 +44,7 @@ jQuery('.add_product_view_media').click( function( event ){
 
   file_frame.on( 'select', function() {
     attachment = file_frame.state().get('selection').first().toJSON();
-    newView(attachment);      
+    newView(attachment);
   });
 
   file_frame.open();

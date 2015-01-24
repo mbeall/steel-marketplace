@@ -13,7 +13,7 @@ function steel_marketplace_admin_menu() {
   if (is_plugin_active('steel/steel.php')) {
     add_submenu_page( 'steel', 'Marketplace Options', 'Marketplace', 'manage_options', 'steel_marketplace', 'marketplace_submenu_page' );
   }
-	else {
+  else {
     add_submenu_page( 'edit.php?post_type=steel_product', 'Marketplace Options', 'Options', 'manage_options', 'steel_marketplace', 'marketplace_submenu_page' );
   }
 }
@@ -30,7 +30,7 @@ function marketplace_submenu_page() {
       <p class="submit"><input type="submit" class="button-primary" value="<?php _e('Save Changes') ?>" /></p>
     </form>
   </div>
-  <?php 
+  <?php
 }
 
 /*
@@ -41,10 +41,10 @@ function steel_marketplace_admin_init(){
   $options = get_option('marketplace_options');
   $option_set1 = !empty($options['product_option_set_1_name']) ? $options['product_option_set_1_name'] : 'Option Set 1';
   $option_set2 = !empty($options['product_option_set_2_name']) ? $options['product_option_set_2_name'] : 'Option Set 2';
-  
+
   //Register Marketplace Options
   register_setting('marketplace_options', 'marketplace_options', 'marketplace_options_validate' );
-      
+
   add_settings_section('paypal', 'PayPal', 'paypal_section', 'steel_marketplace');
     add_settings_field('paypal_merch_id', 'Merchant ID', 'paypal_merch_id_field', 'steel_marketplace', 'paypal' );
 
@@ -53,7 +53,7 @@ function steel_marketplace_admin_init(){
     add_settings_field('product_price'     , 'Product Price'           , 'product_price_field'     , 'steel_marketplace', 'product_details' );
     add_settings_field('product_shipping'  , 'Additional shipping cost', 'product_shipping_field'  , 'steel_marketplace', 'product_details' );
     add_settings_field('product_dimensions', 'Dimensions'              , 'product_dimensions_field', 'steel_marketplace', 'product_details' );
-    
+
   add_settings_section('product_options', 'Product Options', 'product_options_section', 'steel_marketplace');
     add_settings_field('product_option_set_1_name', 'Option Set 1 Name'      , 'product_option_set_1_name_field', 'steel_marketplace', 'product_options' );
     add_settings_field('product_option_set_1'     , $option_set1 . ' Options', 'product_option_set_1_field'     , 'steel_marketplace', 'product_options' );
@@ -169,7 +169,7 @@ function marketplace_options_validate($input) {
     $newinput['paypal_merch_id'] = trim($input['paypal_merch_id']);
     if(!preg_match('/^[a-z0-9]{13}$/i', $newinput['paypal_merch_id']) & !empty($newinput['paypal_merch_id'])) { add_settings_error( 'paypal_merch_id', 'invalid', 'Invalid PayPal Merchant ID. <span style="font-weight:normal;display:block;">A PayPal Merchant ID consists of 13 alphanumeric characters.</span>' ); }
     $newinput['paypal_merch_id'] = trim($input['paypal_merch_id']);
-    
+
     $newinput['product_ref'          ] = trim($input['product_ref'          ]);
     $newinput['product_price'        ] = trim($input['product_price'        ]);
     $newinput['product_shipping'     ] = trim($input['product_shipping'     ]);
