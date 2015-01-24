@@ -28,6 +28,7 @@ global $marketplace_ver;
 $marketplace_ver = 0.1;
 
 include_once dirname( __FILE__ ) . '/options.php';
+include_once dirname( __FILE__ ) . '/options2.php';
 include_once dirname( __FILE__ ) . '/templates.php';
 
 /**
@@ -35,7 +36,7 @@ include_once dirname( __FILE__ ) . '/templates.php';
  */
 add_action( 'admin_enqueue_scripts', 'steel_marketplace_admin_scripts' );
 function steel_marketplace_admin_scripts() {
-	global $marketplace_ver;
+  global $marketplace_ver;
   wp_enqueue_style( 'steel-marketplace-admin-style', plugins_url('steel-marketplace/css/admin.css') );
   wp_enqueue_style( 'dashicons'                                                                     );
 
@@ -52,8 +53,8 @@ function steel_marketplace_admin_scripts() {
 }
 add_action( 'wp_enqueue_scripts', 'steel_marketplace_scripts' );
 function steel_marketplace_scripts() {
-	global $marketplace_ver;
-	wp_enqueue_style ( 'marketplace-style', plugins_url('steel-marketplace/css/marketplace.css'  ), array(), $marketplace_ver);
+  global $marketplace_ver;
+  wp_enqueue_style ( 'marketplace-style', plugins_url('steel-marketplace/css/marketplace.css'  ), array(), $marketplace_ver);
 }
 
 add_action( 'init', 'steel_marketplace_init', 0 );
@@ -154,30 +155,34 @@ function steel_product_meta_boxes() {
   add_meta_box('steel_product_view_meta'  , 'Product Views'  , 'steel_product_view_meta'  , 'steel_product', 'side', 'high');
 }
 function steel_product_details() {
-  if (product_details_display('product_ref')) {?>
-    <p class="product_ref"><span class="form-addon-left">Ref #</span><input type="text" size="18" name="product_ref" placeholder="Ref #" value="<?php echo steel_product_meta ('ref'); ?>" /></p>
+  $options = steel_get_options();
+
+  if ($options['edit_product_id']) {?>
+    <p class="product_ref"><span class="form-addon-left"><?php echo strtoupper($options['product_id_type']); ?></span><input type="text" size="18" name="product_ref" placeholder="Product ID" value="<?php echo steel_product_meta('ref'); ?>" /></p>
   <?php
   }
-  if (product_details_display('product_price')) {?>
+  if ($options['edit_product_price']) {?>
     <p class="product_price">
       <label>Base price</label><br />
       <span class="form-addon-left">$</span><input type="text" size="21" name="product_price" placeholder="Price" value="<?php echo steel_product_meta ('price'); ?>" />
     </p>
   <?php
   }
-  if (product_details_display('product_shipping')) {?>
+  if ($options['edit_product_shipping']) {?>
     <p class="product_shipping">
       <label>Additional shipping cost</label><br />
       <span class="form-addon-left">$</span><input type="text" size="21" name="product_shipping" value="<?php echo steel_product_meta('shipping'); ?>" />
     </p>
   <?php
   }
-  if (product_details_display('product_dimensions')) {?>
+  if ($options['edit_product_width_height']) {?>
     <p class="product_dimensions">
       <label>Dimensions</label><br />
       <input type="text" size="5" name="product_width" placeholder="Width" value="<?php echo steel_product_meta('width'); ?>" /> x
-      <input type="text" size="5" name="product_height" placeholder="Height" value="<?php echo steel_product_meta('height'); ?>" /> x
-      <input type="text" size="5" name="product_depth" placeholder="Depth" value="<?php echo steel_product_meta('depth'); ?>" />
+      <input type="text" size="5" name="product_height" placeholder="Height" value="<?php echo steel_product_meta('height'); ?>" />
+      <?php if ($options['edit_product_depth']) { ?>x
+        <input type="text" size="5" name="product_depth" placeholder="Depth" value="<?php echo steel_product_meta('depth'); ?>" />
+      <?php } ?>
     </p>
   <?php
   }
@@ -185,7 +190,7 @@ function steel_product_details() {
 function steel_product_view_meta() {
   global $post;
   $product_view_order = steel_product_meta( 'view_order' );
-  
+
   //Backwards compatibility for Sparks Store
   if (has_post_thumbnail()) {
     $thumb_id = get_post_thumbnail_id();
@@ -250,7 +255,7 @@ function save_steel_product() {
  * Display Product metadata
  */
 function steel_product_meta( $key, $post_id = NULL ) {
-	global $post;
+  global $post;
   $custom = $post_id == NULL ? get_post_custom($post->ID) : get_post_custom($post_id);
   $meta = !empty($custom['product_'.$key][0]) ? $custom['product_'.$key][0] : '';
   return $meta;
@@ -275,27 +280,6 @@ function steel_product_dimensions( $args = array(), $sep = ' x ' ) {
 }
 
 /*
- * Add function product_details_display
- */
-function product_details_display($key) {
-  $options = get_option('marketplace_options');
-  $default = array('product_ref','product_price','product_shipping',);
-  if (empty($options[ $key ])) :
-    if (in_array( $key, $default )) :
-      return true;
-    else :
-      return false;
-    endif;
-  else :
-    if ($options[$key] == 'true') :
-      return true;
-    else :
-      return false;
-    endif;
-  endif;
-}
-
-/*
  * Display product_viewshow by id
  */
 function steel_product_thumbnail( $size = 'full' ) {
@@ -303,10 +287,10 @@ function steel_product_thumbnail( $size = 'full' ) {
   $post_id = $post->ID;
   $product_view_order = steel_product_meta( 'view_order' );
   $product_views = explode(',', $product_view_order);
-  
+
   if (has_post_thumbnail()) { the_post_thumbnail($size); }
   elseif ($product_view_order && is_singular()) {
-  
+
     $output     = '';
     $indicators = '';
     $items      = '';
@@ -315,8 +299,8 @@ function steel_product_thumbnail( $size = 'full' ) {
     $count      = -1;
     $i          = -1;
     $t          = -1;
-  
-    
+
+
     $indicators .= '<ol class="carousel-indicators">';
     foreach ($product_views as $product_view) {
       if (!empty($product_view)) {
@@ -325,24 +309,24 @@ function steel_product_thumbnail( $size = 'full' ) {
       }
     }
     $indicators .= '</ol>';
-  
+
     //Wrapper for product_views
     foreach ($product_views as $product_view) {
       if (!empty($product_view)) {
         $image   = wp_get_attachment_image_src( $product_view, 'steel-product' );
         $title   = steel_product_meta( 'view_title_'  .$product_view, $post_id );
         $i += 1;
-  
+
         $items .= $i >= 1 ? '<div class="item">' : '<div class="item active">';
         $items .= !empty($link) ? '<a href="'.$link.'">' : '';
         $items .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
         $items .= !empty($link) ? '</a>' : '';
-  
+
         if (!empty($title) || !empty($content)) {
           $items .= '<div class="carousel-caption">';
-          
+
             if (!empty($title)) { $items .= '<p id="product_views_title_'.$product_view.'">' .$title.'</p>'; }
-          
+
           $items .= '</div>';//.carousel-caption
         }
         $items .= '</div>';//.item
@@ -354,29 +338,29 @@ function steel_product_thumbnail( $size = 'full' ) {
         $image   = wp_get_attachment_image_src( $product_view, 'steel-product-thumb' );
         $title   = steel_product_meta( 'view_title_'  .$product_view, $post_id );
         $t += 1;
-  
+
         $thumbs .= $t >= 1 ? '<a href="#product_views" data-slide-to="'.$t.'">' : '<a href="#product_views" data-slide-to="'.$t.'" class="active">';
         $thumbs .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
         $thumbs .= '</a>';//.thumb
       }
     }
-  
+
     //Output
     $output .= '<div id="product_views" class="carousel product_views" data-ride="carousel" data-interval="false">';
-    
+
     $output .= '<div class="carousel-inner">';
     $output .= $items;
     $output .= '</div>';
     $output .= $thumbs;
     $output .= '</div>';
-  
+
     echo $output;
   }
   elseif ($product_view_order) {
-  
+
     $output     = '';
     $i          = -1;
-  
+
     //Wrapper for product_views
     foreach ($product_views as $product_view) {
       if (!empty($product_view) && $i<0) {
@@ -386,7 +370,7 @@ function steel_product_thumbnail( $size = 'full' ) {
         $output .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
       }
     }
-  
+
     echo $output;
   }
 }
