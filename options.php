@@ -11,13 +11,13 @@
 add_action('admin_menu', 'steel_marketplace_admin_menu', 20);
 function steel_marketplace_admin_menu() {
   if (is_plugin_active('steel/steel.php')) {
-    add_submenu_page( 'steel', 'Marketplace Options', 'Marketplace', 'manage_options', 'steel_marketplace', 'marketplace_submenu_page' );
+    add_submenu_page( 'steel', 'Marketplace Options', 'Marketplace', 'manage_options', 'steel_marketplace', 'steel_marketplace_submenu_page' );
   }
   else {
-    add_submenu_page( 'edit.php?post_type=steel_product', 'Marketplace Options', 'Options', 'manage_options', 'steel_marketplace', 'marketplace_submenu_page' );
+    add_submenu_page( 'edit.php?post_type=steel_product', 'Marketplace Options', 'Options', 'manage_options', 'steel_marketplace', 'steel_marketplace_submenu_page' );
   }
 }
-function marketplace_submenu_page() {
+function steel_marketplace_submenu_page() {
   ?>
   <div class="wrap">
     <h2>Marketplace Options</h2>
@@ -45,27 +45,27 @@ function steel_marketplace_admin_init(){
   //Register Marketplace Options
   register_setting('marketplace_options', 'marketplace_options', 'marketplace_options_validate' );
 
-  add_settings_section('paypal', 'PayPal', 'paypal_section', 'steel_marketplace');
-    add_settings_field('paypal_merch_id', 'Merchant ID', 'paypal_merch_id_field', 'steel_marketplace', 'paypal' );
+  add_settings_section('paypal', 'PayPal', 'steel_marketplace_paypal_section', 'steel_marketplace');
+    add_settings_field('paypal_merch_id', 'Merchant ID', 'steel_marketplace_paypal_merchant_id_field', 'steel_marketplace', 'paypal' );
 
-  add_settings_section('product_details', 'Product Details', 'product_details_section', 'steel_marketplace');
-    add_settings_field('product_ref'       , 'Reference Number'        , 'product_ref_field'       , 'steel_marketplace', 'product_details' );
-    add_settings_field('product_price'     , 'Product Price'           , 'product_price_field'     , 'steel_marketplace', 'product_details' );
-    add_settings_field('product_shipping'  , 'Additional shipping cost', 'product_shipping_field'  , 'steel_marketplace', 'product_details' );
-    add_settings_field('product_dimensions', 'Dimensions'              , 'product_dimensions_field', 'steel_marketplace', 'product_details' );
+  add_settings_section('product_details', 'Product Details', 'steel_marketplace_product_details_section', 'steel_marketplace');
+    add_settings_field('product_ref'       , 'Reference Number'        , 'steel_marketplace_product_id_field'       , 'steel_marketplace', 'product_details' );
+    add_settings_field('product_price'     , 'Product Price'           , 'steel_marketplace_product_price_field'     , 'steel_marketplace', 'product_details' );
+    add_settings_field('product_shipping'  , 'Additional shipping cost', 'steel_marketplace_shipping_field'  , 'steel_marketplace', 'product_details' );
+    add_settings_field('product_dimensions', 'Dimensions'              , 'steel_marketplace_dimensions_field', 'steel_marketplace', 'product_details' );
 
-  add_settings_section('product_options', 'Product Options', 'product_options_section', 'steel_marketplace');
-    add_settings_field('product_option_set_1_name', 'Option Set 1 Name'      , 'product_option_set_1_name_field', 'steel_marketplace', 'product_options' );
-    add_settings_field('product_option_set_1'     , $option_set1 . ' Options', 'product_option_set_1_field'     , 'steel_marketplace', 'product_options' );
-    add_settings_field('product_option_set_2_name', 'Option Set 2 Name'      , 'product_option_set_2_name_field', 'steel_marketplace', 'product_options' );
-    add_settings_field('product_option_set_2'     , $option_set2 . ' Options', 'product_option_set_2_field'     , 'steel_marketplace', 'product_options' );
+  add_settings_section('product_options', 'Product Options', 'steel_marketplace_product_options_section', 'steel_marketplace');
+    add_settings_field('product_option_set_1_name', 'Option Set 1 Name'      , 'steel_marketplace_product_option_set_1_name_field', 'steel_marketplace', 'product_options' );
+    add_settings_field('product_option_set_1'     , $option_set1 . ' Options', 'steel_marketplace_product_option_set_1_field'     , 'steel_marketplace', 'product_options' );
+    add_settings_field('product_option_set_2_name', 'Option Set 2 Name'      , 'steel_marketplace_product_option_set_2_name_field', 'steel_marketplace', 'product_options' );
+    add_settings_field('product_option_set_2'     , $option_set2 . ' Options', 'steel_marketplace_product_option_set_2_field'     , 'steel_marketplace', 'product_options' );
 }
 
 /*
  * Callback settings for Marketplace Options page
  */
-function paypal_section() { echo ''; }
-function paypal_merch_id_field() {
+function steel_marketplace_paypal_section() { echo ''; }
+function steel_marketplace_paypal_merchant_id_field() {
   $options = get_option('marketplace_options');
 
   $output  = '<input id="paypal_merch_id" name="marketplace_options[paypal_merch_id]" size="40" type="text" value="';
@@ -73,8 +73,8 @@ function paypal_merch_id_field() {
   $output .= '">';
   echo $output;
 }
-function product_details_section() { echo 'Select the details you would like to be able to define within the product administration screen'; }
-function product_ref_field() {
+function steel_marketplace_product_details_section() { echo 'Select the details you would like to be able to define within the product administration screen'; }
+function steel_marketplace_product_id_field() {
   $options = get_option('marketplace_options');
 
   $details = !empty($options['product_ref']) ? $options['product_ref'] : 'true'; ?>
@@ -85,7 +85,7 @@ function product_ref_field() {
   </div>
   <?php
 }
-function product_price_field() {
+function steel_marketplace_product_price_field() {
   $options = get_option('marketplace_options');
 
   $details = !empty($options['product_price']) ? $options['product_price'] : 'true'; ?>
@@ -96,7 +96,7 @@ function product_price_field() {
   </div>
   <?php
 }
-function product_shipping_field() {
+function steel_marketplace_shipping_field() {
   $options = get_option('marketplace_options');
 
   $details = !empty($options['product_shipping']) ? $options['product_shipping'] : 'true'; ?>
@@ -107,7 +107,7 @@ function product_shipping_field() {
   </div>
   <?php
 }
-function product_dimensions_field() {
+function steel_marketplace_dimensions_field() {
   $options = get_option('marketplace_options');
 
   $details = !empty($options['product_dimensions']) ? $options['product_dimensions'] : 'false'; ?>
@@ -118,8 +118,8 @@ function product_dimensions_field() {
   </div>
   <?php
 }
-function product_options_section() { echo 'Define global options for all products that have no cost variance'; }
-function product_option_set_1_name_field() {
+function steel_marketplace_product_options_section() { echo 'Define global options for all products that have no cost variance'; }
+function steel_marketplace_product_option_set_1_name_field() {
   $options = get_option('marketplace_options');
 
   $output  = '<label for="marketplace_options[product_option_set_1_name]">';
@@ -129,7 +129,7 @@ function product_option_set_1_name_field() {
   $output .= ' i.e. Colors</label>';
   echo $output;
 }
-function product_option_set_1_field() {
+function steel_marketplace_product_option_set_1_field() {
   $options = get_option('marketplace_options');
 
   $output  = '<label for="marketplace_options[product_option_set_1]">';
@@ -139,7 +139,7 @@ function product_option_set_1_field() {
   $output .= ' Seperate with commas</label>';
   echo $output;
 }
-function product_option_set_2_name_field() {
+function steel_marketplace_product_option_set_2_name_field() {
   $options = get_option('marketplace_options');
 
   $output  = '<label for="marketplace_options[product_option_set_2_name]">';
@@ -149,7 +149,7 @@ function product_option_set_2_name_field() {
   $output .= ' i.e. Sizes</label>';
   echo $output;
 }
-function product_option_set_2_field() {
+function steel_marketplace_product_option_set_2_field() {
   $options = get_option('marketplace_options');
 
   $output  = '<label for="marketplace_options[product_option_set_2]">';
@@ -163,7 +163,7 @@ function product_option_set_2_field() {
 /*
  * Validate settings for Marketplace Options page
  */
-function marketplace_options_validate($input) {
+function steel_marketplace_save_options($input) {
   global $newinput;
 
     $newinput['paypal_merch_id'] = trim($input['paypal_merch_id']);
