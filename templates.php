@@ -8,7 +8,9 @@
  */
 
 add_action('flint_widget_area_right_steel_product','steel_product_widget_area_right');
-function steel_product_widget_area_right() { ?>
+function steel_product_widget_area_right() {
+  $product_option_set_1 = marketplace_options('product_option_set_1');
+  $product_option_set_2 = marketplace_options('product_option_set_2'); ?>
   <div class="panel panel-primary">
     <div class="panel-heading">
       <h3 class="panel-title"><?php the_title(); ?></h3>
@@ -22,31 +24,31 @@ function steel_product_widget_area_right() { ?>
       <input type="hidden" name="item_name" value="<?php the_title(); ?>">
       <input type="hidden" name="amount" value="<?php echo steel_product_meta( 'price' ) ?>">
       <input type="hidden" name="currency_code" value="USD">
-      <?php if (!empty(marketplace_options('product_option_set_1'))) { ?>
+      <?php if (!empty($product_option_set_1)) { ?>
         <div class="form-group">
           <label for="os0"><?php echo marketplace_options('product_option_set_1_name'); ?></label>
           <input type="hidden" name="on0" value="<?php echo marketplace_options('product_option_set_1_name'); ?>">
           <select class="form-control" name="os0" required>
             <option value="None selected">Select <?php echo strtolower(marketplace_options('product_option_set_1_name')); ?></option>
           <?php
-            $colors1 = explode(',',marketplace_options('product_option_set_1'));
-            foreach($colors1 as $color) {
-              echo '<option value="'.$color.'">'.$color.'</option>';
+            $options1 = explode(',',$product_option_set_1);
+            foreach($options1 as $option) {
+              echo '<option value="'.$option.'">'.$option.'</option>';
             }
           ?>
           </select>
         </div>
       <?php } ?>
-      <?php if (!empty(marketplace_options('product_option_set_2'))) { ?>
+      <?php if (!empty($product_option_set_2)) { ?>
         <div class="form-group">
           <label for="os1"><?php echo marketplace_options('product_option_set_2_name'); ?></label>
           <input type="hidden" name="on1" value="<?php echo marketplace_options('product_option_set_2_name'); ?>">
           <select class="form-control" name="os1" required>
             <option value="None selected">Select <?php echo strtolower(marketplace_options('product_option_set_2_name')); ?></option>
           <?php
-            $colors2 = explode(',',marketplace_options('product_option_set_2'));
-            foreach($colors2 as $color) {
-              echo '<option value="'.$color.'">'.$color.'</option>';
+            $options2 = explode(',',$product_option_set_2);
+            foreach($options2 as $option) {
+              echo '<option value="'.$option.'">'.$option.'</option>';
             }
           ?>
           </select>
