@@ -28,8 +28,8 @@ global $marketplace_ver;
 $marketplace_ver = 0.1;
 
 include_once dirname( __FILE__ ) . '/options.php';
-include_once dirname( __FILE__ ) . '/options2.php';
 include_once dirname( __FILE__ ) . '/templates.php';
+include_once dirname( __FILE__ ) . '/variations.php';
 
 /**
  * Load scripts
