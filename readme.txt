@@ -1,4 +1,4 @@
-=== Steel ===
+=== Steel Marketplace ===
 Contributors: starverte, mbeall
 Tags: bootstrap, carousel, quotes, shortcodes, slides, teams, widgets
 Requires at least: 3.4
