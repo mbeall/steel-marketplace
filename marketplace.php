@@ -1,15 +1,15 @@
 <?php
 /*
 Plugin Name: Steel Marketplace
-Plugin URI: //Not yet developed
+Plugin URI: https://github.com/starverte/steel-marketplace.git
 Description: A plugin that is part of the Sparks Framework. Extends Steel and creates an easy ecommerce development framework.
-Version: 0.1
+Version: 0.2.0 (Steel 1.2.0)
 Author: Star Verte LLC
 Author URI: http://starverte.com/
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/
 
-  Copyright 2014 Star Verte LLC (email : info@starverte.com)
+  Copyright 2014-2015 Star Verte LLC (email : info@starverte.com)
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,11 +24,8 @@ License URI: http://www.gnu.org/licenses/
   You should have received a copy of the GNU General Public License
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
-global $marketplace_ver;
-$marketplace_ver = 0.1;
 
 include_once dirname( __FILE__ ) . '/options.php';
-include_once dirname( __FILE__ ) . '/templates.php';
 include_once dirname( __FILE__ ) . '/variations.php';
 
 /**
@@ -36,7 +33,6 @@ include_once dirname( __FILE__ ) . '/variations.php';
  */
 add_action( 'admin_enqueue_scripts', 'steel_marketplace_admin_scripts' );
 function steel_marketplace_admin_scripts() {
-  global $marketplace_ver;
   wp_enqueue_style( 'steel-marketplace-admin-style', plugins_url('steel-marketplace/css/admin.css') );
   wp_enqueue_style( 'dashicons'                                                                     );
 
@@ -47,14 +43,13 @@ function steel_marketplace_admin_scripts() {
   wp_enqueue_script( 'jquery-effects-core' );
   wp_enqueue_script( 'jquery-effects-blind');
 
-  wp_enqueue_script( 'marketplace', plugins_url('steel-marketplace/js/marketplace.js'  ), array('jquery'), $marketplace_ver, true );
+  wp_enqueue_script( 'marketplace', plugins_url('steel-marketplace/js/marketplace.js'  ), array('jquery'), 0.2.0, true );
 
   wp_enqueue_media();
 }
 add_action( 'wp_enqueue_scripts', 'steel_marketplace_scripts' );
 function steel_marketplace_scripts() {
-  global $marketplace_ver;
-  wp_enqueue_style ( 'marketplace-style', plugins_url('steel-marketplace/css/marketplace.css'  ), array(), $marketplace_ver);
+  wp_enqueue_style ( 'marketplace-style', plugins_url('steel-marketplace/css/marketplace.css'  ), array(), 0.2.0);
 }
 
 add_action( 'init', 'steel_marketplace_init', 0 );
