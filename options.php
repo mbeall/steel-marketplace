@@ -47,7 +47,7 @@ function steel_marketplace_admin_init(){
     add_settings_field('dimensions'     , 'Dimensions'     , 'steel_marketplace_dimensions_field'   , 'steel_marketplace', 'product_details' );
 
   add_settings_section('product_options', 'Product Options', 'steel_marketplace_product_options_section', 'steel_marketplace');
-    add_settings_field('product_options', 'Product Options', 'steel_marketplace_product_options_field', 'steel_marketplace', 'variations' );
+    add_settings_field('product_options', 'Product Options', 'steel_marketplace_product_options_field', 'steel_marketplace', 'product_options' );
 }
 
 /*

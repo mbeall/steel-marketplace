@@ -43,13 +43,13 @@ function steel_marketplace_admin_scripts() {
   wp_enqueue_script( 'jquery-effects-core' );
   wp_enqueue_script( 'jquery-effects-blind');
 
-  wp_enqueue_script( 'marketplace', plugins_url('steel-marketplace/js/marketplace.js'  ), array('jquery'), 0.2.0, true );
+  wp_enqueue_script( 'marketplace', plugins_url('steel-marketplace/js/marketplace.js'  ), array('jquery'), '0.2.0', true );
 
   wp_enqueue_media();
 }
 add_action( 'wp_enqueue_scripts', 'steel_marketplace_scripts' );
 function steel_marketplace_scripts() {
-  wp_enqueue_style ( 'marketplace-style', plugins_url('steel-marketplace/css/marketplace.css'  ), array(), 0.2.0);
+  wp_enqueue_style ( 'marketplace-style', plugins_url('steel-marketplace/css/marketplace.css'  ), array(), '0.2.0');
 }
 
 add_action( 'init', 'steel_marketplace_init', 0 );
