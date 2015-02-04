@@ -136,9 +136,9 @@ function steel_marketplace_init() {
   register_taxonomy( 'steel_product_category', 'steel_product', $args2 );
   register_taxonomy_for_object_type( 'post_tag', 'steel_product' );
 
-  add_image_size( 'steel-product'           , 580, 360, true);
-  add_image_size( 'steel-product-thumb'     , 150,  95, true);
-  add_image_size( 'steel-product-view-thumb', 250, 155, true);
+  add_image_size( 'steel-product'           , 580, 360, true );
+  add_image_size( 'steel-product-thumb'     , 150,  95, true );
+  add_image_size( 'steel-product-view-thumb', 250, 155, true );
 }
 
 /*
@@ -146,14 +146,14 @@ function steel_marketplace_init() {
  */
 add_action( 'add_meta_boxes', 'steel_product_meta_boxes' );
 function steel_product_meta_boxes() {
-  add_meta_box('steel_product_details', 'Product Details', 'steel_product_details', 'steel_product', 'side'        );
-  add_meta_box('steel_product_view_meta'  , 'Product Views'  , 'steel_product_view_meta'  , 'steel_product', 'side', 'high');
+  add_meta_box('steel_product_details_meta', 'Product Details', 'steel_product_details_meta', 'steel_product', 'side');
+  add_meta_box('steel_product_view_meta', 'Product Views', 'steel_product_view_meta', 'steel_product', 'side', 'high');
 }
-function steel_product_details() {
+function steel_product_details_meta() {
   $options = steel_get_options();
 
   if ($options['edit_product_id']) {?>
-    <p class="product_ref"><span class="form-addon-left"><?php echo strtoupper($options['product_id_type']); ?></span><input type="text" size="18" name="product_ref" placeholder="Product ID" value="<?php echo steel_product_meta('ref'); ?>" /></p>
+    <p class="product_id"><span class="form-addon-left"><?php echo strtoupper($options['product_id_type']); ?></span><input type="text" size="18" name="product_id" placeholder="Product ID" value="<?php echo steel_product_meta('ref'); ?>" /></p>
   <?php
   }
   if ($options['edit_product_price']) {?>
@@ -172,7 +172,7 @@ function steel_product_details() {
   }
   if ($options['edit_product_width_height']) {?>
     <p class="product_dimensions">
-      <label>Dimensions</label><br />
+      <label>Dimensions (<?php echo $options['product_dimensions_units']; ?>)</label><br />
       <input type="text" size="5" name="product_width" placeholder="Width" value="<?php echo steel_product_meta('width'); ?>" /> x
       <input type="text" size="5" name="product_height" placeholder="Height" value="<?php echo steel_product_meta('height'); ?>" />
       <?php if ($options['edit_product_depth']) { ?>x
@@ -181,6 +181,7 @@ function steel_product_details() {
     </p>
   <?php
   }
+  do_action('steel_product_details');
 }
 function steel_product_view_meta() {
   global $post;
@@ -197,19 +198,20 @@ function steel_product_view_meta() {
   $product_views = explode(',', $product_view_order);
 
   $output = '';
-  $output .= '<a href="#" class="button add_product_view_media" id="btn_above" title="Add product_view to product_viewhow"><span class="steel-icon-cover-photo"></span> New product view</a>';
+  $output .= '<a href="#" class="button add_product_view_media" id="btn_above" title="Add product_view to product_viewhow"><span class="dashicons dashicons-format-image"></span> New product view</a>';
   $output .= '<div id="product_view">';
   foreach ($product_views as $product_view) {
     if (!empty($product_view)) {
       $image = wp_get_attachment_image_src( $product_view, 'steel-product-view-thumb' );
+      $title = !empty(steel_product_meta( 'view_title_'.$product_view )) ? steel_product_meta( 'view_title_'.$product_view ) : '&nbsp;' ;
       $output .= '<div class="product-view" id="';
       $output .= $product_view;
       $output .= '">';
-      $output .= '<div class="product-view-controls"><span id="controls_'.$product_view.'">'.steel_product_meta( 'view_title_'.$product_view ).'</span><a class="del-product-view" href="#" onclick="deleteView(\''.$product_view.'\')" title="Delete product view"><span class="steel-icon-dismiss" style="float:right"></span></a></div>';
+      $output .= '<div class="product-view-controls"><span id="controls_'.$product_view.'">'.$title.'</span><a class="del-product-view" href="#" onclick="deleteView(\''.$product_view.'\')" title="Delete product view"><span class="dashicons dashicons-dismiss" style="float:right"></span></a></div>';
       $output .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" width="'.$image[1].'" height="'.$image[2].'">';
-      $output .= '<span class="steel-icon-cover-photo" style="float:left;padding:5px;"></span><input class="product-view-title" type="text" size="23" name="product_view_title_';
+      $output .= '<span class="dashicons dashicons-format-image" style="float:left;padding:5px;"></span><input class="product-view-title" type="text" size="23" name="product_view_title_';
       $output .= $product_view;
-      $output .= '" id="product_view_title_'.$product_view.'" value="'.steel_product_meta( 'view_title_'.$product_view ).'" placeholder="Title (i.e. Front)" style="margin:0;" />';
+      $output .= '" id="product_view_title_'.$product_view.'" value="'.steel_product_meta( 'view_title_'.$product_view ).'" placeholder="Title (i.e. Front)" />';
       $output .= '</div>';
     }
   }
@@ -224,36 +226,57 @@ function steel_product_view_meta() {
 /*
  * Save data from meta boxes
  */
-add_action('save_post', 'save_steel_product');
-function save_steel_product() {
+add_action('save_post_steel_product', 'steel_save_steel_product');
+function steel_save_steel_product() {
   global $post;
   if(defined('DOING_AUTOSAVE') && DOING_AUTOSAVE && (isset($post_id))) { return $post_id; }
   if(defined('DOING_AJAX') && DOING_AJAX && (isset($post_id))) { return $post_id; } //Prevents the metaboxes from being overwritten while quick editing.
   if(preg_match('/\edit\.php/', $_SERVER['REQUEST_URI']) && (isset($post_id))) { return $post_id; } //Detects if the save action is coming from a quick edit/batch edit.
-  if (isset($_POST['product_ref'     ])) { update_post_meta($post->ID, 'product_ref'     , $_POST['product_ref'     ]); }
+
+  do_action('steel_save_steel_product_meta');
+}
+
+add_action('steel_save_steel_product_meta', 'steel_save_steel_product_details', 10);
+function steel_save_steel_product_details() {
+  global $post;
+
+  if (isset($_POST['product_id'      ])) { update_post_meta($post->ID, 'product_id'      , $_POST['product_id'      ]); }
   if (isset($_POST['product_price'   ])) { update_post_meta($post->ID, 'product_price'   , $_POST['product_price'   ]); }
   if (isset($_POST['product_shipping'])) { update_post_meta($post->ID, 'product_shipping', $_POST['product_shipping']); }
   if (isset($_POST['product_width'   ])) { update_post_meta($post->ID, 'product_width'   , $_POST['product_width'   ]); }
   if (isset($_POST['product_height'  ])) { update_post_meta($post->ID, 'product_height'  , $_POST['product_height'  ]); }
   if (isset($_POST['product_depth'   ])) { update_post_meta($post->ID, 'product_depth'   , $_POST['product_depth'   ]); }
+}
+
+add_action('steel_save_steel_product_meta', 'steel_save_steel_product_views', 20);
+function steel_save_steel_product_views() {
+  global $post;
 
   if (isset($_POST['product_view_order']   )) {
-    update_post_meta($post->ID, 'product_view_order'   , $_POST['product_view_order']);
+    update_post_meta($post->ID, 'product_view_order', $_POST['product_view_order']);
     $product_views = explode(',', get_post_meta($post->ID, 'product_view_order', true));
     foreach ($product_views as $product_view) {
-      if (isset($_POST['product_view_title_'   . $product_view])) { update_post_meta($post->ID, 'product_view_title_'  . $product_view, $_POST['product_view_title_'   . $product_view]); }
+      if (isset($_POST['product_view_title_' . $product_view])) { update_post_meta($post->ID, 'product_view_title_' . $product_view, $_POST['product_view_title_' . $product_view]); }
     }
   }
 }
 
 /*
  * Display Product metadata
+ *
+ * @deprecated Use steel_get_product_meta() instead
+ * @todo Remove in Steel Marketplace 1.0.0
  */
 function steel_product_meta( $key, $post_id = NULL ) {
   global $post;
-  $custom = $post_id == NULL ? get_post_custom($post->ID) : get_post_custom($post_id);
-  $meta = !empty($custom['product_'.$key][0]) ? $custom['product_'.$key][0] : '';
-  return $meta;
+  $key = $key == 'ref' ? 'product_id' : 'product_' . $key;
+  return steel_get_product_meta( $post_id, $key, true );
+}
+
+function steel_get_product_meta( $post_id = NULL, $key = '', $single = false ) {
+  global $post;
+  $post_id = $post_id == NULL ? $post->ID : $post_id;
+  return get_post_meta( $post_id, $key, $single );
 }
 
 function steel_product_dimensions( $args = array(), $sep = ' x ' ) {

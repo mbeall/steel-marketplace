@@ -5,7 +5,6 @@
  * @package Steel
  */
 
-
 if ( ! function_exists( 'steel_marketplace_variations' ) ) {
   // Register Custom Taxonomies
   function steel_marketplace_variations() {

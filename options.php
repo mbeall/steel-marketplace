@@ -41,7 +41,7 @@ function steel_marketplace_admin_init(){
   add_settings_section('paypal', 'PayPal', 'steel_marketplace_paypal_section', 'steel_marketplace');
     add_settings_field('paypal_merchant_id', 'Merchant ID', 'steel_marketplace_paypal_merchant_id_field', 'steel_marketplace', 'paypal' );
 
-  add_settings_section('product_details', 'Product Details', 'steel_marketplace_product_details_section'        , 'steel_marketplace');
+  add_settings_section('product_details', 'Product Details', 'steel_marketplace_product_details_section', 'steel_marketplace');
     add_settings_field('product_id'     , 'Product ID'     , 'steel_marketplace_product_id_field'   , 'steel_marketplace', 'product_details' );
     add_settings_field('product_price'  , 'Product Price'  , 'steel_marketplace_product_price_field', 'steel_marketplace', 'product_details' );
     add_settings_field('dimensions'     , 'Dimensions'     , 'steel_marketplace_dimensions_field'   , 'steel_marketplace', 'product_details' );
@@ -100,6 +100,21 @@ function steel_marketplace_dimensions_field() {
   <div class="radio-group">
     <label for="steel_options[edit_product_width_height]"><input name="steel_options[edit_product_width_height]" type="checkbox" value="true" <?php checked( $options['edit_product_width_height'], true  ) ?>>Width x Height</label>
     <label for="steel_options[edit_product_depth]"><input name="steel_options[edit_product_depth]" type="checkbox" value="true" <?php checked( $options['edit_product_depth'], true  ) ?>>Depth</label>
+    <select name="steel_options[product_dimensions_units]">
+    <?php
+    $choices = array(
+      'in' => 'inches',
+      'ft' => 'feet',
+      'mm' => 'millimeters',
+      'cm' => 'centimeters',
+      'm'  => 'meters',
+    );
+
+    foreach ( $choices as $value => $label ) {
+      echo '<option value="'.$value.'" '.selected($options['product_dimensions_units'],$value).'>'.$label.'</option>';
+    }
+    ?>
+    </select>
   </div>
   <?php
 }
@@ -118,27 +133,31 @@ function steel_marketplace_product_options_field() {
 /*
  * Validate settings for Marketplace Options page
  */
-function steel_marketplace_save_options($raw, $valid) {
+function steel_marketplace_save_options($valid, $raw) {
+  if (isset($raw['product_id_type'])) {
+    $valid = array();
+    $valid = steel_get_options();
 
-  $valid['paypal_merchant_id'] = trim($raw['paypal_merchant_id']);
-  if(!preg_match('/^[a-z0-9]{13}$/i', $valid['paypal_merchant_id']) && !empty($valid['paypal_merchant_id'])) { add_settings_error( 'paypal_merchant_id', 'invalid', 'Invalid PayPal Merchant ID. <span style="font-weight:normal;display:block;">A PayPal Merchant ID consists of 13 alphanumeric characters.</span>' ); }
-  $valid['paypal_merchant_id'] = trim($raw['paypal_merchant_id']);
+    $valid['paypal_merchant_id'] = trim($raw['paypal_merchant_id']);
+    if(!preg_match('/^[a-z0-9]{13}$/i', $valid['paypal_merchant_id']) && !empty($valid['paypal_merchant_id'])) { add_settings_error( 'paypal_merchant_id', 'invalid', 'Invalid PayPal Merchant ID. <span style="font-weight:normal;display:block;">A PayPal Merchant ID consists of 13 alphanumeric characters.</span>' ); }
+    $valid['paypal_merchant_id'] = trim($raw['paypal_merchant_id']);
 
-  $valid['edit_product_id'] = isset($raw['edit_product_id']) ? true : false;
+    $valid['edit_product_id'] = $raw['edit_product_id'] == 'true' ? true : false;
+    $valid['product_id_type'] = trim($raw['product_id_type']);
 
-  $valid['edit_product_price'     ] = isset($raw['edit_product_price']) ? true : false;
-  $valid['product_id_type'] = trim($raw['product_id_type']);
+    $valid['edit_product_price'       ] = $raw['edit_product_price'       ] == 'true' ? true : false;
+    $valid['edit_product_shipping'    ] = $raw['edit_product_shipping'    ] == 'true' ? true : false;
+    $valid['edit_product_width_height'] = $raw['edit_product_width_height'] == 'true' ? true : false;
+    $valid['edit_product_depth'       ] = $raw['edit_product_depth'       ] == 'true' ? true : false;
+    $valid['product_dimensions_units' ] = trim($raw['product_dimensions_units']);
 
-  $valid['edit_product_shipping'    ] = isset($raw['edit_product_shipping'    ]) ? true : false;
-  $valid['edit_product_width_height'] = isset($raw['edit_product_width_height']) ? true : false;
-  $valid['edit_product_depth'       ] = isset($raw['edit_product_depth'       ]) ? true : false;
-
-  $valid['edit_product_colors'] = isset($raw['edit_product_colors']) ? true : false;
-  $valid['edit_product_sizes' ] = isset($raw['edit_product_sizes' ]) ? true : false;
+    $valid['edit_product_colors'] = $raw['edit_product_colors'] == 'true' ? true : false;
+    $valid['edit_product_sizes' ] = $raw['edit_product_sizes' ] == 'true' ? true : false;
+  }
 
   return $valid;
 }
-add_filter('steel_options_validate', 'steel_marketplace_save_options');
+add_filter('steel_save_options', 'steel_marketplace_save_options', 10, 2);
 
 function steel_marketplace_option_defaults( $steel_defaults ) {
   $defaults = array(
@@ -187,7 +206,7 @@ function steel_marketplace_option_defaults( $steel_defaults ) {
   }
   //END - Backwards compatibility
 
-  return array_merge( $steel_defaults, $defaults );
+  return wp_parse_args( $steel_defaults, $defaults );
 }
 add_filter('steel_option_defaults','steel_marketplace_option_defaults');
 
