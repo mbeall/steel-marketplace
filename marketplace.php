@@ -414,13 +414,12 @@ function steel_save_steel_product_views() {
  * Display Product metadata
  *
  * @deprecated Use steel_get_product_meta() instead
- * @todo Remove in Steel Marketplace 1.0.0
  */
 function steel_product_meta( $key, $post_id = NULL ) {
   global $post;
-  $post_id = $post_id == NULL ? $post->ID : $post_id;
-  $key = $key == 'ref' ? 'product_id' : 'product_' . $key;
-  return get_post_meta( $post_id, $key, true );
+  $custom = $post_id == NULL ? get_post_custom($post->ID) : get_post_custom($post_id);
+  $meta = !empty($custom['product_'.$key][0]) ? $custom['product_'.$key][0] : '';
+  return $meta;
 }
 
 function steel_get_product_meta( $post_id = NULL ) {
@@ -446,6 +445,12 @@ function steel_get_product_meta( $post_id = NULL ) {
   return wp_parse_args($meta, $defaults);
 }
 
+/*
+ * Display product dimensions
+ *
+ * @deprecated
+ * @todo Replace with steel_get_product_dimensions
+ */
 function steel_product_dimensions( $args = array(), $sep = ' x ' ) {
   $defaults = array (
     'sep1' => $sep,
@@ -455,27 +460,26 @@ function steel_product_dimensions( $args = array(), $sep = ' x ' ) {
   );
   $args = wp_parse_args($args, $defaults);
   $args = (object) $args;
-
-  $details = steel_get_product_meta();
-
-  if ( $dimensions = 3 && !empty($details['product_width']) && !empty($details['product_height']) && !empty($details['product_depth'])) { printf( $details['product_width'] . $args->unit . $args->sep1 . $details['product_height'] . $args->unit . $args->sep2 . $details['product_depth'] . $args->unit ); }
-    elseif ( !empty($details['product_width']) && !empty($details['product_height']) ) { printf( $details['product_width'] . $args->unit . $args->sep1 . $details['product_height'] . $args->unit ); }
+  $width  = steel_product_meta('width' );
+  $height = steel_product_meta('height');
+  $depth  = steel_product_meta('depth' );
+  if ( $dimensions = 3 && !empty($width) && !empty($height) && !empty($depth)) { printf( $width . $args->unit . $args->sep1 . $height . $args->unit . $args->sep2 . $depth . $args->unit ); }
+    elseif ( !empty($width) && !empty($height) ) { printf( $width . $args->unit . $args->sep1 . $height . $args->unit ); }
 }
 
 /*
  * Display product_viewshow by id
+ *
+ * @deprecated
+ * @todo Replace with steel_get_product_views
  */
 function steel_product_thumbnail( $size = 'full' ) {
   global $post;
   $post_id = $post->ID;
-
-  $details = steel_get_product_meta();
-  $product_view_order = $details['product_view_order'];
+  $product_view_order = steel_product_meta( 'view_order' );
   $product_views = explode(',', $product_view_order);
-
   if (has_post_thumbnail()) { the_post_thumbnail($size); }
   elseif ($product_view_order && is_singular()) {
-
     $output     = '';
     $indicators = '';
     $items      = '';
@@ -484,8 +488,6 @@ function steel_product_thumbnail( $size = 'full' ) {
     $count      = -1;
     $i          = -1;
     $t          = -1;
-
-
     $indicators .= '<ol class="carousel-indicators">';
     foreach ($product_views as $product_view) {
       if (!empty($product_view)) {
@@ -494,28 +496,19 @@ function steel_product_thumbnail( $size = 'full' ) {
       }
     }
     $indicators .= '</ol>';
-
     //Wrapper for product_views
     foreach ($product_views as $product_view) {
       if (!empty($product_view)) {
-        $image = wp_get_attachment_image_src( $product_view, 'steel-product' );
-
-        $pv_details = steel_get_product_meta( $post_id );
-
-        $title = $pv_details['product_view_title_'.$product_view];
-
+        $image   = wp_get_attachment_image_src( $product_view, 'steel-product' );
+        $title   = steel_product_meta( 'view_title_'  .$product_view, $post_id );
         $i += 1;
-
         $items .= $i >= 1 ? '<div class="item">' : '<div class="item active">';
         $items .= !empty($link) ? '<a href="'.$link.'">' : '';
         $items .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
         $items .= !empty($link) ? '</a>' : '';
-
         if (!empty($title) || !empty($content)) {
           $items .= '<div class="carousel-caption">';
-
             if (!empty($title)) { $items .= '<p id="product_views_title_'.$product_view.'">' .$title.'</p>'; }
-
           $items .= '</div>';//.carousel-caption
         }
         $items .= '</div>';//.item
@@ -524,50 +517,35 @@ function steel_product_thumbnail( $size = 'full' ) {
     //Wrapper for product_views
     foreach ($product_views as $product_view) {
       if (!empty($product_view) & $i >= 1) {
-        $image = wp_get_attachment_image_src( $product_view, 'steel-product-thumb' );
-
-        $pv_details = steel_get_product_meta( $post_id );
-
-        $title = $pv_details['product_view_title_'.$product_view];
-
+        $image   = wp_get_attachment_image_src( $product_view, 'steel-product-thumb' );
+        $title   = steel_product_meta( 'view_title_'  .$product_view, $post_id );
         $t += 1;
-
         $thumbs .= $t >= 1 ? '<a href="#product_views" data-slide-to="'.$t.'">' : '<a href="#product_views" data-slide-to="'.$t.'" class="active">';
         $thumbs .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
         $thumbs .= '</a>';//.thumb
       }
     }
-
     //Output
     $output .= '<div id="product_views" class="carousel product_views" data-ride="carousel" data-interval="false">';
-
     $output .= '<div class="carousel-inner">';
     $output .= $items;
     $output .= '</div>';
     $output .= $thumbs;
     $output .= '</div>';
-
     echo $output;
   }
   elseif ($product_view_order) {
-
     $output     = '';
     $i          = -1;
-
     //Wrapper for product_views
     foreach ($product_views as $product_view) {
       if (!empty($product_view) && $i<0) {
-        $image = wp_get_attachment_image_src( $product_view, 'steel-product' );
-
-        $pv_details = steel_get_product_meta( $post_id );
-
-        $title = $pv_details['product_view_title_'.$product_view];
-
+        $image   = wp_get_attachment_image_src( $product_view, 'steel-product' );
+        $title   = steel_product_meta( 'view_title_'  .$product_view, $post_id );
         $i += 1;
         $output .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
       }
     }
-
     echo $output;
   }
 }
