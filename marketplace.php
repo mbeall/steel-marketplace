@@ -837,3 +837,19 @@ function steel_get_product_id_alt( $args = array() ) {
     return;
   }
 }
+
+/*
+ * Get product manufacturer
+ */
+function steel_get_product_manufacturer() {
+  global $post;
+  $meta = steel_get_product_meta();
+  $terms = get_the_terms($post->ID, 'steel_product_manufacturer');
+  $i = -1;
+  $manufacturers = array();
+  foreach ($terms as $term) {
+    $i = $i + 1;
+    $manufacturers[$i] = $term->name;
+  }
+  return $manufacturers[0];
+}
