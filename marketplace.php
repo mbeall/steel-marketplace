@@ -465,8 +465,7 @@ function steel_get_product_meta( $post_id = NULL ) {
 /*
  * Display product dimensions
  *
- * @deprecated
- * @todo Replace with steel_get_product_dimensions
+ * @deprecated Use steel_get_product_dimensions instead
  */
 function steel_product_dimensions( $args = array(), $sep = ' x ' ) {
   $defaults = array (
@@ -485,10 +484,86 @@ function steel_product_dimensions( $args = array(), $sep = ' x ' ) {
 }
 
 /*
+ * Get product dimensions
+ */
+function steel_get_product_dimensions( $args = array() ) {
+  $meta   = steel_get_product_meta();
+  $_width  = $meta['product_width' ][0];
+  $_height = $meta['product_height'][0];
+  $_depth  = $meta['product_depth' ][0];
+
+  $options       = steel_get_options();
+  $units         = $options['product_dimensions_units'];
+  $display_depth = $options['edit_product_depth'      ];
+
+  $unit_codes = array(
+    'mm' => 'MMT',
+    'cm' => 'CMT',
+    'in' => 'INH',
+    'ft' => 'FOT',
+    'm'  => 'MTR',
+  );
+  $unit_code = $unit_codes[$units];
+
+  $defaults = array (
+    'container'       => 'div',
+    'container_class' => 'dimensions',
+    'container_id'    => '',
+    'before'          => '<strong>Dimensions</strong>: ',
+    'after'           => '',
+    'before_vector'   => '<span class="vector" id="%1$s" itemprop="%1$s" itemscope itemtype="http://schema.org/QuantitativeValue"><span itemprop="value">',
+    'after_vector'    => '</span> <meta itemprop="unitCode" content="%2$s">%3$s</span>',
+    'depth'           => $display_depth,
+    'separator'       => ' x ',
+    'units'           => $units,
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($_width) && !empty($_height)) {
+    $width = sprintf( $args->before_vector . $_width . $args->after_vector, 'width', $unit_code, $args->units);
+    $height = sprintf( $args->before_vector . $_height . $args->after_vector, 'height', $unit_code, $args->units);
+
+    if (!empty($_depth) && $args->depth == true) {
+      $depth = sprintf( $args->before_vector . $_depth . $args->after_vector, 'depth', $unit_code, $args->units);
+
+      return sprintf(
+        '<%1$s class="%2$s" id="%3$s">%4$s %6$s %5$s %7$s %5$s %8$s %9$s</%1$s>',
+        $args->container,
+        $args->container_class,
+        $args->container_id,
+        $args->before,
+        $args->separator,
+        $width,
+        $height,
+        $depth,
+        $args->after
+      );
+    }
+    else {
+      return sprintf(
+        '<%1$s class="%2$s" id="%3$s">%4$s%6$s%5$s%7$s%8$s</%1$s>',
+        $args->container,
+        $args->container_class,
+        $args->container_id,
+        $args->before,
+        $args->separator,
+        $width,
+        $height,
+        $args->after
+      );
+    }
+  }
+
+  else {
+    return;
+  }
+}
+
+/*
  * Display product_viewshow by id
  *
- * @deprecated
- * @todo Replace with steel_get_product_views
+ * @deprecated Use steel_get_product_views or steel_get_product_thumbnail instead
  */
 function steel_product_thumbnail( $size = 'full' ) {
   global $post;
