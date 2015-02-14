@@ -748,3 +748,37 @@ function steel_get_product_warranty( $format = 'short' ) {
       break;
   }
 }
+
+/*
+ * Get product weight
+ */
+function steel_get_product_weight( $args = array() ) {
+  $meta   = steel_get_product_meta();
+  $weight  = $meta['product_weight'][0];
+
+  $options = steel_get_options();
+  $units   = $options['product_weight_units'];
+
+  $unit_codes = array(
+    'oz' => 'ONZ',
+    'g'  => 'GRM',
+    'lb' => 'LBR',
+    'kg' => 'KGM',
+  );
+  $unit_code = $unit_codes[$units];
+
+  $defaults = array (
+    'before' => '<div class="weight"><strong>Weight</strong>: <span id="weight" itemprop="weight" itemscope itemtype="http://schema.org/QuantitativeValue"><span itemprop="value">',
+    'after'  => '</span> <meta itemprop="unitCode" content="%1$s">%2$s</span></div>',
+    'units'  => $units,
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($weight)) {
+    return sprintf( $args->before . $weight . $args->after, $unit_code, $args->units);
+  }
+  else {
+    return;
+  }
+}
