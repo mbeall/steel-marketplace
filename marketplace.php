@@ -643,3 +643,33 @@ function steel_get_product_views( $args = array() ) {
     echo $output;
   }
 }
+
+/*
+ * Get product warranty
+ */
+function steel_get_product_warranty( $format = 'short' ) {
+  $meta = steel_get_product_meta();
+  $num = $meta['product_warranty_num'][0];
+  $period = $meta['product_warranty_period'][0];
+
+  switch($format) {
+    case 'short' :
+      $match = array(
+        'd' => 'day',
+        'W' => 'wk',
+        'm' => 'mo',
+        'y' => 'yr',
+      );
+      return $num.'-'.$match[$period].' warranty';
+      break;
+    case 'long' :
+      $match = array(
+        'd' => 'day',
+        'W' => 'week',
+        'm' => 'month',
+        'y' => 'year',
+      );
+      return $num.' '.$match[$period].' warranty';
+      break;
+  }
+}
