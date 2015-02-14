@@ -643,7 +643,36 @@ function steel_product_thumbnail( $size = 'full' ) {
 }
 
 /*
- * Display product_viewshow by id
+ * Get product thumbnail
+ */
+function steel_get_product_thumbnail( $size = 'full' ) {
+  global $post;
+  $post_id = $post->ID;
+  $meta = steel_get_product_meta();
+  $product_view_order = $meta['product_view_order'][0];
+  $product_views = explode( ',', $product_view_order );
+
+  if ( has_post_thumbnail() ) {
+    the_post_thumbnail($size);
+  }
+  elseif ($product_view_order) {
+    $output     = '';
+    $i          = -1;
+    //Wrapper for product_views
+    foreach ($product_views as $product_view) {
+      if (!empty($product_view) && $i<0) {
+        $image   = wp_get_attachment_image_src( $product_view, $size );
+        $title   = steel_product_meta( 'view_title_'  .$product_view, $post_id );
+        $i += 1;
+        $output .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
+      }
+    }
+    echo $output;
+  }
+}
+
+/*
+ * Get product views
  */
 function steel_get_product_views( $args = array() ) {
   global $post;
