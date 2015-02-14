@@ -566,4 +566,80 @@ function steel_product_thumbnail( $size = 'full' ) {
     echo $output;
   }
 }
-?>
+
+/*
+ * Display product_viewshow by id
+ */
+function steel_get_product_views( $args = array() ) {
+  global $post;
+  $post_id = $post->ID;
+
+  $defaults = array(
+    'product_view_size'       => 'steel-product',
+    'product_view_thumb_size' => 'steel-product-thumb',
+  );
+  $args = wp_parse_args($args, $defaults);
+  $args = (object) $args;
+
+  $meta = steel_get_product_meta();
+  $product_view_order = $meta['product_view_order'];
+  $product_views = explode(',', $product_view_order);
+
+  if ($product_view_order) {
+    $output     = '';
+    $indicators = '';
+    $items      = '';
+    $controls   = '';
+    $thumbs     = '';
+    $count      = -1;
+    $i          = -1;
+    $t          = -1;
+    $indicators .= '<ol class="carousel-indicators">';
+    foreach ($product_views as $product_view) {
+      if (!empty($product_view)) {
+        $count += 1;
+        $indicators .= $count >= 1 ? '<li data-target="#product_views" data-slide-to="'.$count.'"></li>' : '<li data-target="#product_views" data-slide-to="'.$count.'" class="active"></li>';
+      }
+    }
+    $indicators .= '</ol>';
+    //Wrapper for product_views
+    foreach ($product_views as $product_view) {
+      if (!empty($product_view)) {
+        $image   = wp_get_attachment_image_src( $product_view, $args->product_view_size );
+        $title   = $meta['product_view_title_'.$product_view][0];
+        $i += 1;
+        $items .= $i >= 1 ? '<div class="item">' : '<div class="item active">';
+        $items .= !empty($link) ? '<a href="'.$link.'">' : '';
+        $items .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
+        $items .= !empty($link) ? '</a>' : '';
+        if (!empty($title) || !empty($content)) {
+          $items .= '<div class="carousel-caption">';
+            if (!empty($title)) { $items .= '<p id="product_views_title_'.$product_view.'">' .$title.'</p>'; }
+          $items .= '</div>';//.carousel-caption
+        }
+        $items .= '</div>';//.item
+      }
+    }
+    //Wrapper for product_views
+    foreach ($product_views as $product_view) {
+      if (!empty($product_view) & $i >= 1) {
+        $image   = wp_get_attachment_image_src( $product_view, $args->product_view_thumb_size );
+        $title   = $meta['product_view_title_'.$product_view][0];
+        $t += 1;
+        $thumbs .= $t >= 1 ? '<a href="#product_views" data-slide-to="'.$t.'" class="col-xs-3">' : '<a href="#product_views" data-slide-to="'.$t.'" class="col-xs-3 active">';
+        $thumbs .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
+        $thumbs .= '</a>';//.thumb
+      }
+    }
+    //Output
+    $output .= '<div id="product_views" class="carousel product_views" data-ride="carousel" data-interval="false">';
+    $output .= '<div class="carousel-inner">';
+    $output .= $items;
+    $output .= '</div>';
+    $output .= '<div class="row">';
+    $output .= $thumbs;
+    $output .= '</div>';
+    $output .= '</div>';
+    echo $output;
+  }
+}
