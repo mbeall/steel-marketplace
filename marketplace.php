@@ -686,7 +686,7 @@ function steel_get_product_views( $args = array() ) {
   $args = (object) $args;
 
   $meta = steel_get_product_meta();
-  $product_view_order = $meta['product_view_order'];
+  $product_view_order = $meta['product_view_order'][0];
   $product_views = explode(',', $product_view_order);
 
   if ($product_view_order) {
