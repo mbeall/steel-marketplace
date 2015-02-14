@@ -25,6 +25,22 @@ License URI: http://www.gnu.org/licenses/
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+function steel_marketplace_activate() {
+  $dir = plugin_dir_path( __FILE__ );
+  if (is_plugin_active( 'steel/steel.php' )) {
+    $steel_data = get_plugin_data($dir.'/../steel/steel.php');
+    if ($steel_data['Version'] < 1.2) {
+      deactivate_plugins( plugin_basename( __FILE__ ) );
+      wp_die( 'Please update Steel to version 1.2.0 or later before activating Steel Marketplace.' );
+    }
+  }
+  else {
+    deactivate_plugins( plugin_basename( __FILE__ ) );
+    wp_die( 'Steel Marketplace requires Steel version 1.2.0 or later.' );
+  }
+}
+register_activation_hook( __FILE__, 'steel_marketplace_activate' );
+
 include_once dirname( __FILE__ ) . '/options.php';
 include_once dirname( __FILE__ ) . '/variations.php';
 
