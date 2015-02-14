@@ -456,9 +456,10 @@ function steel_get_product_meta( $post_id = NULL ) {
     'product_weight'          => array(''),
     'product_view_order'      => array(''),
   );
+  $details = apply_filters('steel_product_meta', $defaults);
   $meta = get_post_custom( $post_id );
 
-  return wp_parse_args($meta, $defaults);
+  return wp_parse_args($meta, $details);
 }
 
 /*
