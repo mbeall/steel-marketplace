@@ -782,3 +782,29 @@ function steel_get_product_weight( $args = array() ) {
     return;
   }
 }
+
+/*
+ * Get alternate product ID
+ */
+function steel_get_product_id_alt( $args = array() ) {
+  $meta   = steel_get_product_meta();
+  $id_alt = $meta['product_id_alt'][0];
+
+  $options       = steel_get_options();
+  $id_type       = $options['product_id_alt_type'];
+  $id_type_upper = strtoupper($id_type);
+
+  $defaults = array (
+    'before' => '<div class="product-id-alt"><strong>%2$s</strong>: <span itemprop="%1$s">',
+    'after'  => '</span></div>',
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($id_alt)) {
+    return sprintf( $args->before . $id_alt . $args->after, $id_type, $id_type_upper);
+  }
+  else {
+    return;
+  }
+}
