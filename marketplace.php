@@ -824,15 +824,38 @@ function steel_get_product_id_alt( $args = array() ) {
   $id_type_upper = strtoupper($id_type);
 
   $defaults = array (
-    'before' => '<div class="product-id-alt">%3$s<span itemprop="%1$s">',
-    'after'  => '</span></div>',
-    'label'  => '<strong>%2$s</strong>: ',
+    'label'           => '<strong>%2$s</strong>: ',
+    'before'          => '<span itemprop="%1$s">',
+    'after'           => '</span></div>',
+    'container'       => 'div',
+    'container_class' => 'product-id',
   );
   $args = wp_parse_args( $args, $defaults );
   $args = (object) $args;
 
   if (!empty($id_alt)) {
-    return sprintf( $args->before . $id_alt . $args->after, $id_type, $id_type_upper, $args->label);
+    if (!empty($args->container)) {
+      return sprintf(
+        '<%6$s class="%7$s">%3$s%4$s' . $id_alt . '%5$s</%6$s>',
+        $id_type,
+        $id_type_upper,
+        $args->label,
+        $args->before,
+        $args->after,
+        $args->container,
+        $args->container_class
+      );
+    }
+    else {
+      return sprintf(
+        '%3$s%4$s' . $id_alt . '%5$s',
+        $id_type,
+        $id_type_upper,
+        $args->label,
+        $args->before,
+        $args->after
+      );
+    }
   }
   else {
     return;
@@ -867,15 +890,38 @@ function steel_get_product_id( $args = array() ) {
   $id_type_upper = strtoupper($id_type);
 
   $defaults = array (
-    'before' => '<div class="product-id">%3$s<span itemprop="%1$s">',
-    'after'  => '</span></div>',
-    'label'  => '<strong>%2$s</strong>: ',
+    'label'           => '<strong>%2$s</strong>: ',
+    'before'          => '<span itemprop="%1$s">',
+    'after'           => '</span></div>',
+    'container'       => 'div',
+    'container_class' => 'product-id',
   );
   $args = wp_parse_args( $args, $defaults );
   $args = (object) $args;
 
   if (!empty($id)) {
-    return sprintf( $args->before . $id . $args->after, $id_type, $id_type_upper, $args->label);
+    if (!empty($args->container)) {
+      return sprintf(
+        '<%6$s class="%7$s">%3$s%4$s' . $id . '%5$s</%6$s>',
+        $id_type,
+        $id_type_upper,
+        $args->label,
+        $args->before,
+        $args->after,
+        $args->container,
+        $args->container_class
+      );
+    }
+    else {
+      return sprintf(
+        '%3$s%4$s' . $id . '%5$s',
+        $id_type,
+        $id_type_upper,
+        $args->label,
+        $args->before,
+        $args->after
+      );
+    }
   }
   else {
     return;
