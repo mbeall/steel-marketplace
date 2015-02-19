@@ -824,14 +824,15 @@ function steel_get_product_id_alt( $args = array() ) {
   $id_type_upper = strtoupper($id_type);
 
   $defaults = array (
-    'before' => '<div class="product-id-alt"><strong>%2$s</strong>: <span itemprop="%1$s">',
+    'before' => '<div class="product-id-alt">%3$s<span itemprop="%1$s">',
     'after'  => '</span></div>',
+    'label'  => '<strong>%2$s</strong>: ',
   );
   $args = wp_parse_args( $args, $defaults );
   $args = (object) $args;
 
   if (!empty($id_alt)) {
-    return sprintf( $args->before . $id_alt . $args->after, $id_type, $id_type_upper);
+    return sprintf( $args->before . $id_alt . $args->after, $id_type, $id_type_upper, $args->label);
   }
   else {
     return;
@@ -866,14 +867,15 @@ function steel_get_product_id( $args = array() ) {
   $id_type_upper = strtoupper($id_type);
 
   $defaults = array (
-    'before' => '<div class="product-id"><strong>%2$s</strong>: <span itemprop="%1$s">',
+    'before' => '<div class="product-id">%3$s<span itemprop="%1$s">',
     'after'  => '</span></div>',
+    'label'  => '<strong>%2$s</strong>: ',
   );
   $args = wp_parse_args( $args, $defaults );
   $args = (object) $args;
 
   if (!empty($id)) {
-    return sprintf( $args->before . $id . $args->after, $id_type, $id_type_upper);
+    return sprintf( $args->before . $id . $args->after, $id_type, $id_type_upper, $args->label);
   }
   else {
     return;
