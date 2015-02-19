@@ -897,7 +897,7 @@ function steel_get_product_color( $args = array() ) {
   $args = (object) $args;
 
   if (!empty($color)) {
-    return $args->before . $id_alt . $args->after;
+    return $args->before . $color . $args->after;
   }
   else {
     return;
