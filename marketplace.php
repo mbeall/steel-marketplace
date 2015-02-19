@@ -853,3 +853,51 @@ function steel_get_product_manufacturer() {
   }
   return $manufacturers[0];
 }
+
+/*
+ * Get alternate product ID
+ */
+function steel_get_product_id( $args = array() ) {
+  $meta = steel_get_product_meta();
+  $id   = $meta['product_id'][0];
+
+  $options       = steel_get_options();
+  $id_type       = $options['product_id_type'];
+  $id_type_upper = strtoupper($id_type);
+
+  $defaults = array (
+    'before' => '<div class="product-id"><strong>%2$s</strong>: <span itemprop="%1$s">',
+    'after'  => '</span></div>',
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($id)) {
+    return sprintf( $args->before . $id . $args->after, $id_type, $id_type_upper);
+  }
+  else {
+    return;
+  }
+}
+
+/*
+ * Get product color
+ */
+function steel_get_product_color( $args = array() ) {
+  $meta   = steel_get_product_meta();
+  $color = $meta['product_color'][0];
+
+  $defaults = array (
+    'before' => '<div class="product-color"><strong>Color</strong>: <span itemprop="color">',
+    'after'  => '</span></div>',
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($color)) {
+    return $args->before . $id_alt . $args->after;
+  }
+  else {
+    return;
+  }
+}
