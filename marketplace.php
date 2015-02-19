@@ -25,6 +25,22 @@ License URI: http://www.gnu.org/licenses/
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+function steel_marketplace_activate() {
+  $dir = plugin_dir_path( __FILE__ );
+  if (is_plugin_active( 'steel/steel.php' )) {
+    $steel_data = get_plugin_data($dir.'/../steel/steel.php');
+    if ($steel_data['Version'] < 1.2) {
+      deactivate_plugins( plugin_basename( __FILE__ ) );
+      wp_die( 'Please update Steel to version 1.2.0 or later before activating Steel Marketplace.' );
+    }
+  }
+  else {
+    deactivate_plugins( plugin_basename( __FILE__ ) );
+    wp_die( 'Steel Marketplace requires Steel version 1.2.0 or later.' );
+  }
+}
+register_activation_hook( __FILE__, 'steel_marketplace_activate' );
+
 include_once dirname( __FILE__ ) . '/options.php';
 include_once dirname( __FILE__ ) . '/variations.php';
 
@@ -54,6 +70,8 @@ function steel_marketplace_scripts() {
 
 add_action( 'init', 'steel_marketplace_init', 0 );
 function steel_marketplace_init() {
+  $options = steel_get_options();
+
   $labels = array(
     'name'                => _x( 'Products', 'Post Type General Name', 'steel' ),
     'singular_name'       => _x( 'Product', 'Post Type Singular Name', 'steel' ),
@@ -136,9 +154,36 @@ function steel_marketplace_init() {
   register_taxonomy( 'steel_product_category', 'steel_product', $args2 );
   register_taxonomy_for_object_type( 'post_tag', 'steel_product' );
 
-  add_image_size( 'steel-product'           , 580, 360, true);
-  add_image_size( 'steel-product-thumb'     , 150,  95, true);
-  add_image_size( 'steel-product-view-thumb', 250, 155, true);
+  register_taxonomy(
+    'steel_product_manufacturer',
+    array( 'steel_product' ),
+    array(
+      'labels'            => array(
+        'name'                => _x( 'Manufacturers', 'Taxonomy General Name', 'steel' ),
+        'singular_name'       => _x( 'Manufacturer', 'Taxonomy Singular Name', 'steel' ),
+        'menu_name'           => __( 'Manufacturers', 'steel' ),
+        'all_items'           => __( 'All Manufacturers', 'steel' ),
+        'parent_item'         => __( 'Parent Manufacturer', 'steel' ),
+        'parent_item_colon'   => __( 'Parent Manufacturer:', 'steel' ),
+        'new_item_name'       => __( 'New Manufacturer Name', 'steel' ),
+        'add_new_item'        => __( 'Add New Manufacturer', 'steel' ),
+        'edit_item'           => __( 'Edit Manufacturer', 'steel' ),
+        'update_item'         => __( 'Update Manufacturer', 'steel' ),
+        'search_items'        => __( 'Search manufacturers', 'steel' ),
+        'add_or_remove_items' => __( 'Add or remove manufacturers', 'steel' ),
+        'not_found'           => __( 'No manufacturers found', 'steel' ),
+      ),
+      'public'            => $options['edit_product_manufacturer'],
+      'show_in_nav_menus' => false,
+      'show_tagcloud'     => false,
+      'meta_box_cb'       => false,
+      'hierarchical'      => true,
+    )
+  );
+
+  add_image_size( 'steel-product'           , 580, 360, true );
+  add_image_size( 'steel-product-thumb'     , 150,  95, true );
+  add_image_size( 'steel-product-view-thumb', 250, 155, true );
 }
 
 /*
@@ -146,45 +191,103 @@ function steel_marketplace_init() {
  */
 add_action( 'add_meta_boxes', 'steel_product_meta_boxes' );
 function steel_product_meta_boxes() {
-  add_meta_box('steel_product_details', 'Product Details', 'steel_product_details', 'steel_product', 'side'        );
-  add_meta_box('steel_product_view_meta'  , 'Product Views'  , 'steel_product_view_meta'  , 'steel_product', 'side', 'high');
+  add_meta_box('steel_product_details_meta', 'Product Details', 'steel_product_details_meta', 'steel_product', 'side');
+  add_meta_box('steel_product_view_meta', 'Product Views', 'steel_product_view_meta', 'steel_product', 'side', 'high');
 }
-function steel_product_details() {
+function steel_product_details_meta() {
   $options = steel_get_options();
+  $details = steel_get_product_meta();
 
   if ($options['edit_product_id']) {?>
-    <p class="product_ref"><span class="form-addon-left"><?php echo strtoupper($options['product_id_type']); ?></span><input type="text" size="18" name="product_ref" placeholder="Product ID" value="<?php echo steel_product_meta('ref'); ?>" /></p>
+    <p class="product_id"><span class="form-addon-left"><?php echo strtoupper($options['product_id_type']); ?></span><input type="text" size="18" name="product_id" placeholder="Product ID" value="<?php echo $details['product_id'][0]; ?>" /></p>
+  <?php
+  }
+  if ($options['edit_product_id_alt']) {?>
+    <p class="product_id_alt"><span class="form-addon-left"><?php echo strtoupper($options['product_id_alt_type']); ?></span><input type="text" size="16" name="product_id_alt" placeholder="Alternate Product ID" value="<?php echo $details['product_id_alt'][0]; ?>" /></p>
   <?php
   }
   if ($options['edit_product_price']) {?>
     <p class="product_price">
       <label>Base price</label><br />
-      <span class="form-addon-left">$</span><input type="text" size="21" name="product_price" placeholder="Price" value="<?php echo steel_product_meta ('price'); ?>" />
+      <span class="form-addon-left">$</span><input type="text" size="21" name="product_price" placeholder="Price" value="<?php echo $details['product_price'][0]; ?>" />
     </p>
   <?php
   }
   if ($options['edit_product_shipping']) {?>
     <p class="product_shipping">
       <label>Additional shipping cost</label><br />
-      <span class="form-addon-left">$</span><input type="text" size="21" name="product_shipping" value="<?php echo steel_product_meta('shipping'); ?>" />
+      <span class="form-addon-left">$</span><input type="text" size="21" name="product_shipping" placeholder="Shipping" value="<?php echo $details['product_shipping'][0]; ?>" />
     </p>
   <?php
   }
   if ($options['edit_product_width_height']) {?>
     <p class="product_dimensions">
-      <label>Dimensions</label><br />
-      <input type="text" size="5" name="product_width" placeholder="Width" value="<?php echo steel_product_meta('width'); ?>" /> x
-      <input type="text" size="5" name="product_height" placeholder="Height" value="<?php echo steel_product_meta('height'); ?>" />
+      <label>Dimensions (<?php echo $options['product_dimensions_units']; ?>)</label><br />
+      <input type="text" size="5" name="product_width" placeholder="Width" value="<?php echo $details['product_width'][0]; ?>" /> x
+      <input type="text" size="5" name="product_height" placeholder="Height" value="<?php echo $details['product_height'][0]; ?>" />
       <?php if ($options['edit_product_depth']) { ?>x
-        <input type="text" size="5" name="product_depth" placeholder="Depth" value="<?php echo steel_product_meta('depth'); ?>" />
+        <input type="text" size="5" name="product_depth" placeholder="Depth" value="<?php echo $details['product_depth'][0]; ?>" />
       <?php } ?>
     </p>
   <?php
   }
+  if ($options['edit_product_weight']) {?>
+    <p class="product_weight">
+      <label>Weight (<?php echo $options['product_weight_units']; ?>)</label><br />
+      <input type="text" size="21" name="product_weight" placeholder="Weight" value="<?php echo $details['product_weight'][0]; ?>" />
+    </p>
+  <?php
+  }
+  if ($options['edit_product_color']) {?>
+    <p class="product_color">
+      <label>Color</label><br />
+      <input type="text" size="21" name="product_color" placeholder="i.e. Green" value="<?php echo $details['product_color'][0]; ?>" />
+    </p>
+  <?php
+  }
+  if ($options['edit_product_manufacturer']) {?>
+    <p class="product_manufacturer">
+      <label>Manufacturer</label><br />
+      <select name="product_manufacturer">
+        <option>Select</option>
+        <?php
+          $choices = get_terms('steel_product_manufacturer',array('hide_empty'=>false,'fields'=>'id=>name'));
+
+          foreach ( $choices as $value => $label ) {
+            echo '<option value="'.$value.'" '.selected(has_term($value, 'steel_product_manufacturer'),true).'>'.$label.'</option>';
+          }
+        ?>
+      </select>
+    </p>
+  <?php
+  }
+  if ($options['edit_product_warranty']) {?>
+    <p class="product_warranty">
+      <label>Warranty</label><br />
+      <input type="text" size="5" name="product_warranty_num" placeholder="#" value="<?php echo $details['product_warranty_num'][0]; ?>" />
+      <select name="product_warranty_period">
+        <?php
+          $choices = array(
+            'd' => 'day(s)',
+            'W' => 'week(s)',
+            'm' => 'month(s)',
+            'y' => 'year(s)',
+          );
+
+          foreach ( $choices as $value => $label ) {
+            echo '<option value="'.$value.'" '.selected($details['product_warranty_period'][0],$value).'>'.$label.'</option>';
+          }
+        ?>
+      </select>
+    </p>
+  <?php
+  }
+  do_action('steel_product_details');
 }
 function steel_product_view_meta() {
   global $post;
-  $product_view_order = steel_product_meta( 'view_order' );
+  $details = steel_get_product_meta();
+  $product_view_order = $details['product_view_order'][0];
 
   //Backwards compatibility for Sparks Store
   if (has_post_thumbnail()) {
@@ -197,19 +300,20 @@ function steel_product_view_meta() {
   $product_views = explode(',', $product_view_order);
 
   $output = '';
-  $output .= '<a href="#" class="button add_product_view_media" id="btn_above" title="Add product_view to product_viewhow"><span class="steel-icon-cover-photo"></span> New product view</a>';
+  $output .= '<a href="#" class="button add_product_view_media" id="btn_above" title="Add product_view to product_viewhow"><span class="dashicons dashicons-format-image"></span> New product view</a>';
   $output .= '<div id="product_view">';
   foreach ($product_views as $product_view) {
     if (!empty($product_view)) {
       $image = wp_get_attachment_image_src( $product_view, 'steel-product-view-thumb' );
+      $title = !empty($details['product_view_title_'.$product_view][0]) ? $details['product_view_title_'.$product_view][0] : '&nbsp;' ;
       $output .= '<div class="product-view" id="';
       $output .= $product_view;
       $output .= '">';
-      $output .= '<div class="product-view-controls"><span id="controls_'.$product_view.'">'.steel_product_meta( 'view_title_'.$product_view ).'</span><a class="del-product-view" href="#" onclick="deleteView(\''.$product_view.'\')" title="Delete product view"><span class="steel-icon-dismiss" style="float:right"></span></a></div>';
+      $output .= '<div class="product-view-controls"><span id="controls_'.$product_view.'">'.$title.'</span><a class="del-product-view" href="#" onclick="deleteView(\''.$product_view.'\')" title="Delete product view"><span class="dashicons dashicons-dismiss" style="float:right"></span></a></div>';
       $output .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" width="'.$image[1].'" height="'.$image[2].'">';
-      $output .= '<span class="steel-icon-cover-photo" style="float:left;padding:5px;"></span><input class="product-view-title" type="text" size="23" name="product_view_title_';
+      $output .= '<span class="dashicons dashicons-format-image" style="float:left;padding:5px;"></span><input class="product-view-title" type="text" size="23" name="product_view_title_';
       $output .= $product_view;
-      $output .= '" id="product_view_title_'.$product_view.'" value="'.steel_product_meta( 'view_title_'.$product_view ).'" placeholder="Title (i.e. Front)" style="margin:0;" />';
+      $output .= '" id="product_view_title_'.$product_view.'" value="'.$title.'" placeholder="Title (i.e. Front)" />';
       $output .= '</div>';
     }
   }
@@ -224,30 +328,108 @@ function steel_product_view_meta() {
 /*
  * Save data from meta boxes
  */
-add_action('save_post', 'save_steel_product');
-function save_steel_product() {
+add_action('save_post_steel_product', 'steel_save_steel_product');
+function steel_save_steel_product() {
   global $post;
   if(defined('DOING_AUTOSAVE') && DOING_AUTOSAVE && (isset($post_id))) { return $post_id; }
   if(defined('DOING_AJAX') && DOING_AJAX && (isset($post_id))) { return $post_id; } //Prevents the metaboxes from being overwritten while quick editing.
   if(preg_match('/\edit\.php/', $_SERVER['REQUEST_URI']) && (isset($post_id))) { return $post_id; } //Detects if the save action is coming from a quick edit/batch edit.
-  if (isset($_POST['product_ref'     ])) { update_post_meta($post->ID, 'product_ref'     , $_POST['product_ref'     ]); }
-  if (isset($_POST['product_price'   ])) { update_post_meta($post->ID, 'product_price'   , $_POST['product_price'   ]); }
-  if (isset($_POST['product_shipping'])) { update_post_meta($post->ID, 'product_shipping', $_POST['product_shipping']); }
-  if (isset($_POST['product_width'   ])) { update_post_meta($post->ID, 'product_width'   , $_POST['product_width'   ]); }
-  if (isset($_POST['product_height'  ])) { update_post_meta($post->ID, 'product_height'  , $_POST['product_height'  ]); }
-  if (isset($_POST['product_depth'   ])) { update_post_meta($post->ID, 'product_depth'   , $_POST['product_depth'   ]); }
+
+  do_action('steel_save_steel_product_meta');
+}
+
+add_action('steel_save_steel_product_meta', 'steel_save_steel_product_details', 10);
+function steel_save_steel_product_details() {
+  global $post;
+
+  if (isset($_POST['product_id']))
+    update_post_meta($post->ID, 'product_id', sanitize_text_field($_POST['product_id']));
+  if (isset($_POST['product_id_alt']))
+    update_post_meta($post->ID, 'product_id_alt', sanitize_text_field($_POST['product_id_alt']));
+  if (isset($_POST['product_color']))
+    update_post_meta($post->ID, 'product_color', sanitize_text_field($_POST['product_color']));
+
+  if (isset($_POST['product_price'])) {
+    if (!empty($_POST['product_price']))
+      update_post_meta($post->ID, 'product_price', round(floatval($_POST['product_price']),2));
+    else
+      delete_post_meta($post->ID, 'product_price');
+  }
+
+  if (isset($_POST['product_shipping'])) {
+    if (!empty($_POST['product_shipping']))
+      update_post_meta($post->ID, 'product_shipping', round(floatval($_POST['product_shipping']),2));
+    else
+      delete_post_meta($post->ID, 'product_shipping');
+  }
+
+  if (isset($_POST['product_width'])) {
+    if (!empty($_POST['product_width']))
+      update_post_meta($post->ID, 'product_width', floatval($_POST['product_width']));
+    else
+      delete_post_meta($post->ID, 'product_width');
+  }
+
+  if (isset($_POST['product_height'])) {
+    if (!empty($_POST['product_height']))
+      update_post_meta($post->ID, 'product_height', floatval($_POST['product_height']));
+    else
+      delete_post_meta($post->ID, 'product_height');
+  }
+
+  if (isset($_POST['product_depth'])) {
+    if (!empty($_POST['product_depth']))
+      update_post_meta($post->ID, 'product_depth', floatval($_POST['product_depth']));
+    else
+      delete_post_meta($post->ID, 'product_depth');
+  }
+
+  if (isset($_POST['product_weight'])) {
+    if (!empty($_POST['product_weight']))
+      update_post_meta($post->ID, 'product_weight', floatval($_POST['product_weight']));
+    else
+      delete_post_meta($post->ID, 'product_weight');
+  }
+
+  if (isset($_POST['product_manufacturer'])) {
+    if (!empty($_POST['product_manufacturer']))
+      wp_set_object_terms( $post->ID, absint($_POST['product_manufacturer']), 'steel_product_manufacturer' );
+    else
+      wp_set_object_terms( $post->ID, null, 'steel_product_manufacturer' );
+  }
+
+  if (isset($_POST['product_warranty_num'])) {
+    if (!empty($_POST['product_warranty_num']))
+      update_post_meta($post->ID, 'product_warranty_num', absint($_POST['product_warranty_num']));
+    else
+      delete_post_meta($post->ID, 'product_warranty_num');
+  }
+
+  if (isset($_POST['product_warranty_period'])) {
+    if (in_array($_POST['product_warranty_period'], array( 'd', 'W', 'm', 'y' )) )
+      update_post_meta($post->ID, 'product_warranty_period', $_POST['product_warranty_period']);
+    else
+      update_post_meta($post->ID, 'product_warranty_period', 'm');
+  }
+}
+
+add_action('steel_save_steel_product_meta', 'steel_save_steel_product_views', 20);
+function steel_save_steel_product_views() {
+  global $post;
 
   if (isset($_POST['product_view_order']   )) {
-    update_post_meta($post->ID, 'product_view_order'   , $_POST['product_view_order']);
+    update_post_meta($post->ID, 'product_view_order', $_POST['product_view_order']);
     $product_views = explode(',', get_post_meta($post->ID, 'product_view_order', true));
     foreach ($product_views as $product_view) {
-      if (isset($_POST['product_view_title_'   . $product_view])) { update_post_meta($post->ID, 'product_view_title_'  . $product_view, $_POST['product_view_title_'   . $product_view]); }
+      if (isset($_POST['product_view_title_' . $product_view])) { update_post_meta($post->ID, 'product_view_title_' . $product_view, $_POST['product_view_title_' . $product_view]); }
     }
   }
 }
 
 /*
  * Display Product metadata
+ *
+ * @deprecated Use steel_get_product_meta() instead
  */
 function steel_product_meta( $key, $post_id = NULL ) {
   global $post;
@@ -256,6 +438,35 @@ function steel_product_meta( $key, $post_id = NULL ) {
   return $meta;
 }
 
+function steel_get_product_meta( $post_id = NULL ) {
+  global $post;
+  $post_id = $post_id == NULL ? $post->ID : $post_id;
+
+  $defaults = array(
+    'product_id'              => array(''),
+    'product_id_alt'          => array(''),
+    'product_price'           => array(''),
+    'product_shipping'        => array(''),
+    'product_width'           => array(''),
+    'product_height'          => array(''),
+    'product_depth'           => array(''),
+    'product_color'           => array(''),
+    'product_warranty_num'    => array(''),
+    'product_warranty_period' => array('m'),
+    'product_weight'          => array(''),
+    'product_view_order'      => array(''),
+  );
+  $details = apply_filters('steel_product_meta', $defaults);
+  $meta = get_post_custom( $post_id );
+
+  return wp_parse_args($meta, $details);
+}
+
+/*
+ * Display product dimensions
+ *
+ * @deprecated Use steel_get_product_dimensions instead
+ */
 function steel_product_dimensions( $args = array(), $sep = ' x ' ) {
   $defaults = array (
     'sep1' => $sep,
@@ -265,27 +476,102 @@ function steel_product_dimensions( $args = array(), $sep = ' x ' ) {
   );
   $args = wp_parse_args($args, $defaults);
   $args = (object) $args;
-
   $width  = steel_product_meta('width' );
   $height = steel_product_meta('height');
   $depth  = steel_product_meta('depth' );
-
   if ( $dimensions = 3 && !empty($width) && !empty($height) && !empty($depth)) { printf( $width . $args->unit . $args->sep1 . $height . $args->unit . $args->sep2 . $depth . $args->unit ); }
     elseif ( !empty($width) && !empty($height) ) { printf( $width . $args->unit . $args->sep1 . $height . $args->unit ); }
 }
 
 /*
+ * Get product dimensions
+ */
+function steel_get_product_dimensions( $args = array() ) {
+  $meta   = steel_get_product_meta();
+  $_width  = $meta['product_width' ][0];
+  $_height = $meta['product_height'][0];
+  $_depth  = $meta['product_depth' ][0];
+
+  $options       = steel_get_options();
+  $units         = $options['product_dimensions_units'];
+  $display_depth = $options['edit_product_depth'      ];
+
+  $unit_codes = array(
+    'mm' => 'MMT',
+    'cm' => 'CMT',
+    'in' => 'INH',
+    'ft' => 'FOT',
+    'm'  => 'MTR',
+  );
+  $unit_code = $unit_codes[$units];
+
+  $defaults = array (
+    'container'       => 'div',
+    'container_class' => 'dimensions',
+    'container_id'    => '',
+    'before'          => '<strong>Dimensions</strong>: ',
+    'after'           => '',
+    'before_vector'   => '<span class="vector" id="%1$s" itemprop="%1$s" itemscope itemtype="http://schema.org/QuantitativeValue"><span itemprop="value">',
+    'after_vector'    => '</span> <meta itemprop="unitCode" content="%2$s">%3$s</span>',
+    'depth'           => $display_depth,
+    'separator'       => ' x ',
+    'units'           => $units,
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($_width) && !empty($_height)) {
+    $width = sprintf( $args->before_vector . $_width . $args->after_vector, 'width', $unit_code, $args->units);
+    $height = sprintf( $args->before_vector . $_height . $args->after_vector, 'height', $unit_code, $args->units);
+
+    if (!empty($_depth) && $args->depth == true) {
+      $depth = sprintf( $args->before_vector . $_depth . $args->after_vector, 'depth', $unit_code, $args->units);
+
+      return sprintf(
+        '<%1$s class="%2$s" id="%3$s">%4$s %6$s %5$s %7$s %5$s %8$s %9$s</%1$s>',
+        $args->container,
+        $args->container_class,
+        $args->container_id,
+        $args->before,
+        $args->separator,
+        $width,
+        $height,
+        $depth,
+        $args->after
+      );
+    }
+    else {
+      return sprintf(
+        '<%1$s class="%2$s" id="%3$s">%4$s%6$s%5$s%7$s%8$s</%1$s>',
+        $args->container,
+        $args->container_class,
+        $args->container_id,
+        $args->before,
+        $args->separator,
+        $width,
+        $height,
+        $args->after
+      );
+    }
+  }
+
+  else {
+    return;
+  }
+}
+
+/*
  * Display product_viewshow by id
+ *
+ * @deprecated Use steel_get_product_views or steel_get_product_thumbnail instead
  */
 function steel_product_thumbnail( $size = 'full' ) {
   global $post;
   $post_id = $post->ID;
   $product_view_order = steel_product_meta( 'view_order' );
   $product_views = explode(',', $product_view_order);
-
   if (has_post_thumbnail()) { the_post_thumbnail($size); }
   elseif ($product_view_order && is_singular()) {
-
     $output     = '';
     $indicators = '';
     $items      = '';
@@ -294,8 +580,6 @@ function steel_product_thumbnail( $size = 'full' ) {
     $count      = -1;
     $i          = -1;
     $t          = -1;
-
-
     $indicators .= '<ol class="carousel-indicators">';
     foreach ($product_views as $product_view) {
       if (!empty($product_view)) {
@@ -304,24 +588,19 @@ function steel_product_thumbnail( $size = 'full' ) {
       }
     }
     $indicators .= '</ol>';
-
     //Wrapper for product_views
     foreach ($product_views as $product_view) {
       if (!empty($product_view)) {
         $image   = wp_get_attachment_image_src( $product_view, 'steel-product' );
         $title   = steel_product_meta( 'view_title_'  .$product_view, $post_id );
         $i += 1;
-
         $items .= $i >= 1 ? '<div class="item">' : '<div class="item active">';
         $items .= !empty($link) ? '<a href="'.$link.'">' : '';
         $items .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
         $items .= !empty($link) ? '</a>' : '';
-
         if (!empty($title) || !empty($content)) {
           $items .= '<div class="carousel-caption">';
-
             if (!empty($title)) { $items .= '<p id="product_views_title_'.$product_view.'">' .$title.'</p>'; }
-
           $items .= '</div>';//.carousel-caption
         }
         $items .= '</div>';//.item
@@ -333,29 +612,23 @@ function steel_product_thumbnail( $size = 'full' ) {
         $image   = wp_get_attachment_image_src( $product_view, 'steel-product-thumb' );
         $title   = steel_product_meta( 'view_title_'  .$product_view, $post_id );
         $t += 1;
-
         $thumbs .= $t >= 1 ? '<a href="#product_views" data-slide-to="'.$t.'">' : '<a href="#product_views" data-slide-to="'.$t.'" class="active">';
         $thumbs .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
         $thumbs .= '</a>';//.thumb
       }
     }
-
     //Output
     $output .= '<div id="product_views" class="carousel product_views" data-ride="carousel" data-interval="false">';
-
     $output .= '<div class="carousel-inner">';
     $output .= $items;
     $output .= '</div>';
     $output .= $thumbs;
     $output .= '</div>';
-
     echo $output;
   }
   elseif ($product_view_order) {
-
     $output     = '';
     $i          = -1;
-
     //Wrapper for product_views
     foreach ($product_views as $product_view) {
       if (!empty($product_view) && $i<0) {
@@ -365,8 +638,218 @@ function steel_product_thumbnail( $size = 'full' ) {
         $output .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
       }
     }
-
     echo $output;
   }
 }
-?>
+
+/*
+ * Get product thumbnail
+ */
+function steel_get_product_thumbnail( $size = 'full' ) {
+  global $post;
+  $post_id = $post->ID;
+  $meta = steel_get_product_meta();
+  $product_view_order = $meta['product_view_order'][0];
+  $product_views = explode( ',', $product_view_order );
+
+  if ( has_post_thumbnail() ) {
+    the_post_thumbnail($size);
+  }
+  elseif ($product_view_order) {
+    $output     = '';
+    $i          = -1;
+    //Wrapper for product_views
+    foreach ($product_views as $product_view) {
+      if (!empty($product_view) && $i<0) {
+        $image   = wp_get_attachment_image_src( $product_view, $size );
+        $title   = steel_product_meta( 'view_title_'  .$product_view, $post_id );
+        $i += 1;
+        $output .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
+      }
+    }
+    echo $output;
+  }
+}
+
+/*
+ * Get product views
+ */
+function steel_get_product_views( $args = array() ) {
+  global $post;
+  $post_id = $post->ID;
+
+  $defaults = array(
+    'product_view_size'       => 'steel-product',
+    'product_view_thumb_size' => 'steel-product-thumb',
+  );
+  $args = wp_parse_args($args, $defaults);
+  $args = (object) $args;
+
+  $meta = steel_get_product_meta();
+  $product_view_order = $meta['product_view_order'][0];
+  $product_views = explode(',', $product_view_order);
+
+  if ($product_view_order) {
+    $output     = '';
+    $indicators = '';
+    $items      = '';
+    $controls   = '';
+    $thumbs     = '';
+    $count      = -1;
+    $i          = -1;
+    $t          = -1;
+    $indicators .= '<ol class="carousel-indicators">';
+    foreach ($product_views as $product_view) {
+      if (!empty($product_view)) {
+        $count += 1;
+        $indicators .= $count >= 1 ? '<li data-target="#product_views" data-slide-to="'.$count.'"></li>' : '<li data-target="#product_views" data-slide-to="'.$count.'" class="active"></li>';
+      }
+    }
+    $indicators .= '</ol>';
+    //Wrapper for product_views
+    foreach ($product_views as $product_view) {
+      if (!empty($product_view)) {
+        $image   = wp_get_attachment_image_src( $product_view, $args->product_view_size );
+        $title   = $meta['product_view_title_'.$product_view][0];
+        $i += 1;
+        $items .= $i >= 1 ? '<div class="item">' : '<div class="item active">';
+        $items .= !empty($link) ? '<a href="'.$link.'">' : '';
+        $items .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
+        $items .= !empty($link) ? '</a>' : '';
+        if (!empty($title) || !empty($content)) {
+          $items .= '<div class="carousel-caption">';
+            if (!empty($title)) { $items .= '<p id="product_views_title_'.$product_view.'">' .$title.'</p>'; }
+          $items .= '</div>';//.carousel-caption
+        }
+        $items .= '</div>';//.item
+      }
+    }
+    //Wrapper for product_views
+    foreach ($product_views as $product_view) {
+      if (!empty($product_view) & $i >= 1) {
+        $image   = wp_get_attachment_image_src( $product_view, $args->product_view_thumb_size );
+        $title   = $meta['product_view_title_'.$product_view][0];
+        $t += 1;
+        $thumbs .= $t >= 1 ? '<a href="#product_views" data-slide-to="'.$t.'" class="col-xs-3">' : '<a href="#product_views" data-slide-to="'.$t.'" class="col-xs-3 active">';
+        $thumbs .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" alt="'.$title.'">';
+        $thumbs .= '</a>';//.thumb
+      }
+    }
+    //Output
+    $output .= '<div id="product_views" class="carousel product_views" data-ride="carousel" data-interval="false">';
+    $output .= '<div class="carousel-inner">';
+    $output .= $items;
+    $output .= '</div>';
+    $output .= '<div class="row">';
+    $output .= $thumbs;
+    $output .= '</div>';
+    $output .= '</div>';
+    echo $output;
+  }
+}
+
+/*
+ * Get product warranty
+ */
+function steel_get_product_warranty( $format = 'short' ) {
+  $meta = steel_get_product_meta();
+  $num = $meta['product_warranty_num'][0];
+  $period = $meta['product_warranty_period'][0];
+
+  switch($format) {
+    case 'short' :
+      $match = array(
+        'd' => 'day',
+        'W' => 'wk',
+        'm' => 'mo',
+        'y' => 'yr',
+      );
+      return $num.'-'.$match[$period].' warranty';
+      break;
+    case 'long' :
+      $match = array(
+        'd' => 'day',
+        'W' => 'week',
+        'm' => 'month',
+        'y' => 'year',
+      );
+      return $num.' '.$match[$period].' warranty';
+      break;
+  }
+}
+
+/*
+ * Get product weight
+ */
+function steel_get_product_weight( $args = array() ) {
+  $meta   = steel_get_product_meta();
+  $weight  = $meta['product_weight'][0];
+
+  $options = steel_get_options();
+  $units   = $options['product_weight_units'];
+
+  $unit_codes = array(
+    'oz' => 'ONZ',
+    'g'  => 'GRM',
+    'lb' => 'LBR',
+    'kg' => 'KGM',
+  );
+  $unit_code = $unit_codes[$units];
+
+  $defaults = array (
+    'before' => '<div class="weight"><strong>Weight</strong>: <span id="weight" itemprop="weight" itemscope itemtype="http://schema.org/QuantitativeValue"><span itemprop="value">',
+    'after'  => '</span> <meta itemprop="unitCode" content="%1$s">%2$s</span></div>',
+    'units'  => $units,
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($weight)) {
+    return sprintf( $args->before . $weight . $args->after, $unit_code, $args->units);
+  }
+  else {
+    return;
+  }
+}
+
+/*
+ * Get alternate product ID
+ */
+function steel_get_product_id_alt( $args = array() ) {
+  $meta   = steel_get_product_meta();
+  $id_alt = $meta['product_id_alt'][0];
+
+  $options       = steel_get_options();
+  $id_type       = $options['product_id_alt_type'];
+  $id_type_upper = strtoupper($id_type);
+
+  $defaults = array (
+    'before' => '<div class="product-id-alt"><strong>%2$s</strong>: <span itemprop="%1$s">',
+    'after'  => '</span></div>',
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($id_alt)) {
+    return sprintf( $args->before . $id_alt . $args->after, $id_type, $id_type_upper);
+  }
+  else {
+    return;
+  }
+}
+
+/*
+ * Get product manufacturer
+ */
+function steel_get_product_manufacturer() {
+  global $post;
+  $meta = steel_get_product_meta();
+  $terms = get_the_terms($post->ID, 'steel_product_manufacturer');
+  $i = -1;
+  $manufacturers = array();
+  foreach ($terms as $term) {
+    $i = $i + 1;
+    $manufacturers[$i] = $term->name;
+  }
+  return $manufacturers[0];
+}

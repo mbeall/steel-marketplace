@@ -5,7 +5,6 @@
  * @package Steel
  */
 
-
 if ( ! function_exists( 'steel_marketplace_variations' ) ) {
   // Register Custom Taxonomies
   function steel_marketplace_variations() {
@@ -31,7 +30,7 @@ if ( ! function_exists( 'steel_marketplace_variations' ) ) {
           'add_or_remove_items' => __( 'Add or remove colors', 'steel' ),
           'not_found'           => __( 'No colors found', 'steel' ),
         ),
-        'public'            => $steel_options['edit_product_colors'],
+        'public'            => $steel_options['product_options_colors'],
         'show_in_nav_menus' => false,
         'show_tagcloud'     => false,
         'meta_box_cb'       => false,
@@ -58,7 +57,7 @@ if ( ! function_exists( 'steel_marketplace_variations' ) ) {
           'add_or_remove_items' => __( 'Add or remove sizes', 'steel' ),
           'not_found'           => __( 'No sizes found', 'steel' ),
         ),
-        'public'            => $steel_options['edit_product_sizes'],
+        'public'            => $steel_options['product_options_sizes'],
         'show_in_nav_menus' => false,
         'show_tagcloud'     => false,
         'meta_box_cb'       => false,
