@@ -826,9 +826,9 @@ function steel_get_product_id_alt( $args = array() ) {
   $defaults = array (
     'label'           => '<strong>%2$s</strong>: ',
     'before'          => '<span itemprop="%1$s">',
-    'after'           => '</span></div>',
+    'after'           => '</span>',
     'container'       => 'div',
-    'container_class' => 'product-id',
+    'container_class' => 'product-id-alt',
   );
   $args = wp_parse_args( $args, $defaults );
   $args = (object) $args;
@@ -836,24 +836,18 @@ function steel_get_product_id_alt( $args = array() ) {
   if (!empty($id_alt)) {
     if (!empty($args->container)) {
       return sprintf(
-        '<%6$s class="%7$s">%3$s%4$s' . $id_alt . '%5$s</%6$s>',
+        '<%3$s class="%4$s">' . $args->label . $args->before . $id_alt . $args->after . '</%3$s>',
         $id_type,
         $id_type_upper,
-        $args->label,
-        $args->before,
-        $args->after,
         $args->container,
         $args->container_class
       );
     }
     else {
       return sprintf(
-        '%3$s%4$s' . $id_alt . '%5$s',
+        $args->label . $args->before . $id_alt . $args->after,
         $id_type,
-        $id_type_upper,
-        $args->label,
-        $args->before,
-        $args->after
+        $id_type_upper
       );
     }
   }
@@ -892,7 +886,7 @@ function steel_get_product_id( $args = array() ) {
   $defaults = array (
     'label'           => '<strong>%2$s</strong>: ',
     'before'          => '<span itemprop="%1$s">',
-    'after'           => '</span></div>',
+    'after'           => '</span>',
     'container'       => 'div',
     'container_class' => 'product-id',
   );
@@ -902,24 +896,18 @@ function steel_get_product_id( $args = array() ) {
   if (!empty($id)) {
     if (!empty($args->container)) {
       return sprintf(
-        '<%6$s class="%7$s">%3$s%4$s' . $id . '%5$s</%6$s>',
+        '<%3$s class="%4$s">' . $args->label . $args->before . $id . $args->after . '</%3$s>',
         $id_type,
         $id_type_upper,
-        $args->label,
-        $args->before,
-        $args->after,
         $args->container,
         $args->container_class
       );
     }
     else {
       return sprintf(
-        '%3$s%4$s' . $id . '%5$s',
+        $args->label . $args->before . $id . $args->after,
         $id_type,
-        $id_type_upper,
-        $args->label,
-        $args->before,
-        $args->after
+        $id_type_upper
       );
     }
   }
