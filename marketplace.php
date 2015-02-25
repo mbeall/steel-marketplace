@@ -824,14 +824,32 @@ function steel_get_product_id_alt( $args = array() ) {
   $id_type_upper = strtoupper($id_type);
 
   $defaults = array (
-    'before' => '<div class="product-id-alt"><strong>%2$s</strong>: <span itemprop="%1$s">',
-    'after'  => '</span></div>',
+    'label'           => '<strong>%2$s</strong>: ',
+    'before'          => '<span itemprop="%1$s">',
+    'after'           => '</span>',
+    'container'       => 'div',
+    'container_class' => 'product-id-alt',
   );
   $args = wp_parse_args( $args, $defaults );
   $args = (object) $args;
 
   if (!empty($id_alt)) {
-    return sprintf( $args->before . $id_alt . $args->after, $id_type, $id_type_upper);
+    if (!empty($args->container)) {
+      return sprintf(
+        '<%3$s class="%4$s">' . $args->label . $args->before . $id_alt . $args->after . '</%3$s>',
+        $id_type,
+        $id_type_upper,
+        $args->container,
+        $args->container_class
+      );
+    }
+    else {
+      return sprintf(
+        $args->label . $args->before . $id_alt . $args->after,
+        $id_type,
+        $id_type_upper
+      );
+    }
   }
   else {
     return;
@@ -852,4 +870,70 @@ function steel_get_product_manufacturer() {
     $manufacturers[$i] = $term->name;
   }
   return $manufacturers[0];
+}
+
+/*
+ * Get alternate product ID
+ */
+function steel_get_product_id( $args = array() ) {
+  $meta = steel_get_product_meta();
+  $id   = $meta['product_id'][0];
+
+  $options       = steel_get_options();
+  $id_type       = $options['product_id_type'];
+  $id_type_upper = strtoupper($id_type);
+
+  $defaults = array (
+    'label'           => '<strong>%2$s</strong>: ',
+    'before'          => '<span itemprop="%1$s">',
+    'after'           => '</span>',
+    'container'       => 'div',
+    'container_class' => 'product-id',
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($id)) {
+    if (!empty($args->container)) {
+      return sprintf(
+        '<%3$s class="%4$s">' . $args->label . $args->before . $id . $args->after . '</%3$s>',
+        $id_type,
+        $id_type_upper,
+        $args->container,
+        $args->container_class
+      );
+    }
+    else {
+      return sprintf(
+        $args->label . $args->before . $id . $args->after,
+        $id_type,
+        $id_type_upper
+      );
+    }
+  }
+  else {
+    return;
+  }
+}
+
+/*
+ * Get product color
+ */
+function steel_get_product_color( $args = array() ) {
+  $meta   = steel_get_product_meta();
+  $color = $meta['product_color'][0];
+
+  $defaults = array (
+    'before' => '<div class="product-color"><strong>Color</strong>: <span itemprop="color">',
+    'after'  => '</span></div>',
+  );
+  $args = wp_parse_args( $args, $defaults );
+  $args = (object) $args;
+
+  if (!empty($color)) {
+    return $args->before . $color . $args->after;
+  }
+  else {
+    return;
+  }
 }
