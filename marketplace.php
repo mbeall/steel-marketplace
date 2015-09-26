@@ -311,7 +311,7 @@ function steel_product_view_meta() {
       $output .= '">';
       $output .= '<div class="product-view-controls"><span id="controls_'.$product_view.'">'.$title.'</span><a class="del-product-view" href="#" onclick="deleteView(\''.$product_view.'\')" title="Delete product view"><span class="dashicons dashicons-dismiss" style="float:right"></span></a></div>';
       $output .= '<img id="product_view_img_'.$product_view.'" src="'.$image[0].'" width="'.$image[1].'" height="'.$image[2].'">';
-      $output .= '<span class="dashicons dashicons-format-image" style="float:left;padding:5px;"></span><input class="product-view-title" type="text" size="23" name="product_view_title_';
+      $output .= '<span class="dashicons dashicons-format-image" style="float:left;padding:5px;"></span><input class="product-view-title" type="text" size="20" name="product_view_title_';
       $output .= $product_view;
       $output .= '" id="product_view_title_'.$product_view.'" value="'.$title.'" placeholder="Title (i.e. Front)" />';
       $output .= '</div>';
