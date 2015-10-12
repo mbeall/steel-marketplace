@@ -3,7 +3,7 @@
 Plugin Name: Steel Marketplace
 Plugin URI: https://github.com/starverte/steel-marketplace.git
 Description: A plugin that is part of the Sparks Framework. Extends Steel and creates an easy ecommerce development framework.
-Version: 0.2.0 (Steel 1.2.0)
+Version: 0.3.0 (Steel 1.3.0)
 Author: Star Verte LLC
 Author URI: http://starverte.com/
 License: GPLv3 or later
